@@ -13,9 +13,10 @@ var width,
 var fps;
 var hudFontSize,
 	hudFont;
-const constBlock = 0,
-	constEnemy = 1,
-	constPlayer = 2;
+const constEraser = 0,
+	constBlock = 1,
+	constEnemy = 2,
+	constPlayer = 3;
 
 // variables
 var gridX,
@@ -85,6 +86,9 @@ function initializeEverything() {
 	};
 	for(let i=0; i <= constPlayer; i++) {
 		switch(i) {
+			case constEraser:
+				sampleObject.push(new Eraser(json));
+				break;
 			case constBlock:
 				sampleObject.push(new Block(json));
 				break;
@@ -100,8 +104,37 @@ function initializeEverything() {
 //==========================================
 // OBJECTS
 //==========================================
+class Eraser {
+	constructor(json) {
+		this.name = 'eraser';
+		this.width = json.width || gridWidth;
+		this.height = json.width || gridHeight;
+		this.x = json.x || 0;
+		this.y = json.y || 0;
+		this.color = json.color || "#F87";
+		this.bottomColor = json.bottomColor || "#58C";
+		
+		this.canvas = document.createElement('canvas');
+		this.canvas.width = this.width;
+		this.canvas.height = this.height;
+		this.canvasCtx = this.canvas.getContext('2d');
+		this.updateCanvas();
+	}
+	updateCanvas() {
+		this.canvasCtx.fillStyle = this.color;
+		drawRoundedRect({x:0, y:0, width:this.width, height:this.height, borderRadius:this.width/6}, this.canvasCtx);
+		this.canvasCtx.fillStyle = this.bottomColor;
+		drawRoundedRect({x:0, y:this.height/3*2, width:this.width, height:this.height/3, borderRadius:this.width/6}, this.canvasCtx);
+		drawRect({x:0, y:this.height/3*2, width:this.width, height:this.height/6}, this.canvasCtx);
+	}
+	draw(ctx) {
+		ctx.drawImage(this.canvas, this.x, this.y);
+	}
+}
+
 class Block {
 	constructor(json) {
+		this.name = 'block';
 		this.width = json.width || gridWidth;
 		this.height = json.width || gridHeight;
 		this.x = json.x || 0;
@@ -116,7 +149,6 @@ class Block {
 		this.canvas = document.createElement('canvas');
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
-		this.canvas.hidden = true;
 		this.canvasCtx = this.canvas.getContext('2d');
 		this.updateCanvas();
 		
@@ -147,6 +179,7 @@ class Block {
 
 class Enemy {
 	constructor(json) {
+		this.name = 'enemy';
 		this.width = json.width || gridWidth;
 		this.height = json.width || gridHeight;
 		this.x = json.x || 0;
@@ -163,7 +196,6 @@ class Enemy {
 		this.canvas = document.createElement('canvas');
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
-		this.canvas.hidden = true;
 		this.canvasCtx = this.canvas.getContext('2d');
 		this.updateCanvas();
 
@@ -209,6 +241,7 @@ class Enemy {
 
 class Player {
 	constructor(json) {
+		this.name = 'player';
 		this.width = json.width || gridWidth;
 		this.height = json.width || gridHeight;
 		this.x = json.x || 0;
@@ -225,7 +258,6 @@ class Player {
 		this.canvas = document.createElement('canvas');
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
-		this.canvas.hidden = true;
 		this.canvasCtx = this.canvas.getContext('2d');
 		this.updateCanvas();
 		
@@ -271,6 +303,7 @@ class Player {
 
 class Cloud {
 	constructor(json) {
+		this.name = 'cloud';
 		let tam = width < height ? width : height;
 		this.width = json.width || tam/4+Math.random()*tam/4;
 		this.height = json.height || this.width/2+Math.random()*this.width/4;
@@ -283,7 +316,6 @@ class Cloud {
 		this.canvas = document.createElement('canvas');
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
-		this.canvas.hidden = true;
 		this.canvasCtx = this.canvas.getContext('2d');
 		this.createCloudImage(true);
 	}
@@ -383,6 +415,7 @@ class Cloud {
 class Board {
 	constructor() {
 		// variables and constants
+		this.name = 'board';
 		this.topHeight = (width > height? height : width)/3;
 		this.bottomHeight = (width > height? height : width)/6;
 		this.displayed = false;
@@ -727,14 +760,18 @@ function render() {
 // GAME EVENTS
 //==========================================
 // touch events
+canvas.addEventListener('touchstart', touch => {
+	var x = touch.changedTouches[0].clientX,
+		y = touch.changedTouches[0].clientY;
+	mouseX = x;
+	mouseY = y;
+	click = true;
+	clicking();
+});
+
 canvas.addEventListener('touchmove', touch => {
 	var x = touch.changedTouches[0].clientX,
 		y = touch.changedTouches[0].clientY;
-	if(touch.changedTouches.length > 1) {
-		rightClick = true;
-		x = touch.changedTouches[1].clientX,
-		y = touch.changedTouches[1].clientY;
-	}
 	mouseX = x;
 	mouseY = y;
 	click = true;
@@ -798,6 +835,7 @@ canvas.addEventListener("mousedown", md => {
 		if(md.which == 3)
 			rightClick = true;
 	}
+	clicking();
 });
 
 canvas.addEventListener("mouseup", mu => {
@@ -836,9 +874,6 @@ window.addEventListener("keydown", key => {
 		setGridY();
 		return;
 	}
-});
-
-window.addEventListener("keyup", key => {
 });
 
 //==========================================
