@@ -726,10 +726,28 @@ function render() {
 //==========================================
 // GAME EVENTS
 //==========================================
+// touch events
+canvas.addEventListener('touchmove', touch => {
+	var x = touch.changedTouches[0].clientX,
+		y = touch.changedTouches[0].clientY;
+	if(touch.changedTouches.length > 1) {
+		rightClick = true;
+		x = touch.changedTouches[1].clientX,
+		y = touch.changedTouches[1].clientY;
+	}
+	mouseX = x;
+	mouseY = y;
+	click = true;
+});
+
+canvas.addEventListener('touchend', touch => {
+	click = rightClick = false;
+});
+
 // disabling the right click menu
 canvas.addEventListener("contextmenu", ctxM => {
 	ctxM.preventDefault();
-})
+});
 
 // mouse events
 canvas.addEventListener("mousedown", md => {
