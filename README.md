@@ -1,5 +1,5 @@
 # Javascript Videogame Level Maker
 
-# This game currently is in development
+# This game is currently in development
 
 [try online](https://luizon.github.io/LevelMaker/)
