@@ -24,7 +24,8 @@ var gridX,
 	gridWidth,
 	gridHeight;
 var mouseX = 0,
-	mouseY = 0;
+	mouseY = 0,
+	deletedObjectPoint;
 var backgroundColor;
 var selectedObject = constBlock;
 
@@ -68,6 +69,7 @@ function initializeEverything() {
     backgroundColor = "#8CF";
 	gridWidth = Math.ceil(width / gridX);
 	gridHeight = Math.ceil(height / gridY);
+	deletedObjectPoint = {x:-width, y:-width}
 
 	// booleans
     playing = rightClick = click = false;
@@ -419,15 +421,15 @@ class Board {
 		this.topHeight = (width > height? height : width)/3;
 		this.bottomHeight = (width > height? height : width)/6;
 		this.displayed = false;
-		this.font = this.bottomHeight/3 + "px sans-serif";
+		this.fontSize = this.bottomHeight/3;
 		
 		// buttons and things idk
 			// top things
 			let arrowSize = this.topHeight / 2;
 			let displayedBoardSampleObjectBoxSize = 3 * this.topHeight / 4;
 			this.closeBoard = {
-				x: this.topHeight/24,
-				y: this.topHeight/24,
+				x: sampleObjectCanvas.width/5,
+				y: sampleObjectCanvas.width/5,
 				width: this.topHeight/4,
 				height: this.topHeight/4,
 				color: "#FFF",
@@ -494,7 +496,6 @@ class Board {
 				borderRadius: sampleObjectCanvas.width/4,
 				color: "#FFF",
 			};
-
 	}
 	
 	draw(ctx) {
@@ -547,8 +548,7 @@ class Board {
 			
 			// white box
 			ctx.fillStyle = "#FFF";
-			drawRoundedRect(this.displayedBoardSampleObjectBox, ctx);
-			
+			drawRoundedRect(this.displayedBoardSampleObjectBox, ctx);			
 			// object image
 			ctx.drawImage(sampleObject[selectedObject].canvas,
 				this.displayedBoardSampleObjectImage.x,
@@ -556,6 +556,19 @@ class Board {
 				this.displayedBoardSampleObjectImage.width,
 				this.displayedBoardSampleObjectImage.height
 			);
+			// sample object name
+			ctx.fillStyle = "#FFF";
+			drawRoundedRect({
+				x: this.displayedBoardSampleObjectBox.x,
+				y: this.displayedBoardSampleObjectBox.y + this.topHeight - this.fontSize/3,
+				width: this.displayedBoardSampleObjectBox.width,
+				height: this.fontSize * 1.5,
+				borderRadius: this.fontSize/2,
+			}, ctx);
+			ctx.fillStyle = sampleObject[selectedObject].color;
+			drawString(this.displayedBoardSampleObjectImage.x,
+				this.displayedBoardSampleObjectImage.y + this.topHeight,
+				sampleObject[selectedObject].name, ctx);
 			
 			// arrows
 			ctx.fillStyle = "#845FCC";
@@ -591,7 +604,7 @@ class Board {
 			drawRoundedRect(this.gridYButtom, ctx);
 			drawRoundedRect(this.gridXButtom, ctx);
 			ctx.fillStyle = "#640999";
-			ctx.font = this.font;
+			ctx.font = this.fontSize + "px sans-serif";
 			drawString(this.gridXButtom.x + this.bottomHeight/10, this.gridXButtom.y + this.gridXButtom.height/3*2, 'X: '+gridX, ctx);
 			drawString(this.gridYButtom.x + this.bottomHeight/10, this.gridYButtom.y + this.gridYButtom.height/3*2, 'Y: '+gridY, ctx);
 	}
@@ -766,7 +779,7 @@ canvas.addEventListener('touchstart', touch => {
 	mouseX = x;
 	mouseY = y;
 	click = true;
-	clicking();
+	singleClick(x, y);
 });
 
 canvas.addEventListener('touchmove', touch => {
@@ -779,6 +792,7 @@ canvas.addEventListener('touchmove', touch => {
 
 canvas.addEventListener('touchend', touch => {
 	click = rightClick = false;
+	deletedObjectPoint.x = deletedObjectPoint.y = - width;
 });
 
 // disabling the right click menu
@@ -835,11 +849,12 @@ canvas.addEventListener("mousedown", md => {
 		if(md.which == 3)
 			rightClick = true;
 	}
-	clicking();
+	singleClick(md.x, md.y);
 });
 
 canvas.addEventListener("mouseup", mu => {
 	click = rightClick = false;
+	deletedObjectPoint.x = deletedObjectPoint.y = - width;
 })
 
 canvas.addEventListener("mousemove", mm => {
@@ -898,38 +913,91 @@ function rightArrowFunction() {
 		selectedObject++;
 }
 
+function singleClick(clickX, clickY) {
+	var x = clickX || mouseX,
+		y = clickY || mouseY;
+	var thereIsADeletedObject = false;
+	blocks.forEach( (block, i) => {
+		if(pointCollision(x, y, block) && selectedObject === constBlock) {
+			blocks.splice(i, 1);
+			thereIsADeletedObject = true;
+		}
+	});
+	enemys.forEach( (enemy, i) => {
+		if(pointCollision(x, y, enemy) && selectedObject === constEnemy) {
+			enemys.splice(i, 1);
+			thereIsADeletedObject = true;
+		}
+	});
+	player.forEach( (p, i) => {
+		if(pointCollision(x, y, p) && selectedObject === constPlayer) {
+			player.splice(i, 1);
+			thereIsADeletedObject = true;
+		}
+	});
+	if(!thereIsADeletedObject)
+		clicking();
+	else {
+		deletedObjectPoint.x = x;
+		deletedObjectPoint.y = y;
+	}
+}
+
 function clicking() {
-	if((mouseY > board.topHeight && mouseY < height - board.bottomHeight) || !board.displayed)
-	if(click) {
-		let x = mouseX - mouseX % gridWidth,
-			y = mouseY - mouseY % gridHeight;
-		destroyObject(x, y);
-		if(!rightClick) {
-			switch(selectedObject) {
-				case constBlock:
-					new Block({
-						x: x,
-						y: y
-					});
-					break;
-				case constEnemy:
-					new Enemy({
-						x: x,
-						y: y
-					});
-					break;
-				case constPlayer:
-					new Player({
-						x: x,
-						y: y
-					});
-					break;
-				default:
-					console.log('No object selected.');
-					break;
+	if((mouseY > board.topHeight && mouseY < height - board.bottomHeight) || !board.displayed) {
+		if(pointDistance(deletedObjectPoint, {x: mouseX, y: mouseY}) > Math.min(width, height) / 4) {
+			deletedObjectPoint.x = deletedObjectPoint.y = -width;
+			if(click) {
+				let x = mouseX - mouseX % gridWidth,
+					y = mouseY - mouseY % gridHeight;
+				destroyObject(x, y);
+				if(!rightClick) {
+					switch(selectedObject) {
+						case constBlock:
+							new Block({
+								x: x,
+								y: y
+							});
+							break;
+						case constEnemy:
+							new Enemy({
+								x: x,
+								y: y
+							});
+							break;
+						case constPlayer:
+							new Player({
+								x: x,
+								y: y
+							});
+							break;
+						case constEraser:
+							break;
+						default:
+							console.log('No object selected.');
+							break;
+					}
+				}
 			}
 		}
 	}
+}
+
+function pointDistance(arg1, arg2, arg3, arg4) {
+	var x1, y1, x2, y2;
+	if(typeof arg1 == 'object') {
+		x1 = arg1.x;
+		y1 = arg1.y;
+		x2 = arg2.x;
+		y2 = arg2.y;
+	}
+	else {
+		x1 = arg1;
+		y1 = arg2;
+		x2 = arg3;
+		y2 = arg4;
+	}
+	return Math.sqrt(Math.pow(Math.abs(x1 - x2), 2) + Math.pow(Math.abs(y1 - y2), 2));
 }
 
 function collides(obj1, obj2) {
