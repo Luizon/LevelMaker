@@ -103,6 +103,7 @@ function initializeEverything() {
 		}
 	}
 }
+
 //==========================================
 // OBJECTS
 //==========================================
@@ -717,7 +718,7 @@ function drawGrid(ctx) {
 
 function drawTriangle(obj, ctx) {
 	/*
-		this boy accept two forms: a rectangle and a primitive triangle
+		this boy accepts two forms: a rectangle and a primitive triangle
 		Examples:
 			drawTriangle({blocks[2]}, canvasCtx) // it will draw a triangle inside that block object
 			drawTriangle({x: 0, y: 200, width: 100, height, 100}, canvasCtx) // it will draw a triangle in the (x, y) coordinates with the given width and height
@@ -864,7 +865,7 @@ canvas.addEventListener("mousemove", mm => {
 
 // key events, if the user have a keyboard
 window.addEventListener("keydown", key => {
-	console.log(key.keyCode);
+	//console.log(key.keyCode);
 	if(key.keyCode == 27) { // Escape
 		board.displayed = !board.displayed;
 		return;
@@ -894,6 +895,26 @@ window.addEventListener("keydown", key => {
 //==========================================
 // GAME THINGS
 //==========================================
+function blockCollision(object) {
+    return anyCollision(object, blocks);
+}
+
+function enemyCollision(object) {
+    return anyCollision(object, enemys);
+}
+
+function anyCollision(object, array) {
+    let i = 0;
+    let boxes = array.length;
+    while(i < boxes) {
+        if(collides(object, array[i]))
+            return true;
+        i++;
+    }
+    return false;
+}
+
+
 function deleteEverything() {
 	player.splice(0, player.length);
 	blocks.splice(0, blocks.length);
