@@ -4,6 +4,15 @@
 
 [try it online](https://luizon.github.io/LevelMaker/)
 
+## Atajos del teclado
+	
+	ESC: Open the editor menu
+	Right/Left key: Change the selected object
+	P: play
+	G: grid / ungrid
+	X: Change the horizontal number of cells
+	Y: Change the horizontal number of cells
+
 #### TODO list
 	
 	[ ] Agregar ctrl + z
@@ -15,8 +24,8 @@
 		[x] Hacer una función para retornar una hitbox reducida, para fines prácticos
 		[x] Hacer que pueda moverse lateralmente
 		[x] Hacer que reconozca cuando choca con el borde del nivel y se devuelva
-		[ ] Hacer que pueda reconocer si pisa suelo para avanzar, y al llegar a un borde dar vuelta
-		[ ] Hacer que reconozca paredes, sacando curva antes de chocar con una
+		[x] Hacer que pueda reconocer si pisa suelo para avanzar, y al llegar a un borde dar vuelta
+		[x] Hacer que reconozca paredes, sacando curva antes de chocar con una
 		[ ] Hacer que reconozca a otros enemigos, sacando curva en cuanto choque con uno
 		[ ] Hacer un estado de muerte
 			[ ] Detenerse al morir
