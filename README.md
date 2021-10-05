@@ -4,7 +4,7 @@
 
 [try it online](https://luizon.github.io/LevelMaker/)
 
-## Atajos del teclado
+## Keyboard shortcuts
 	
 	ESC: Open the editor menu
 	Right/Left key: Change the selected object
@@ -15,6 +15,8 @@
 
 #### TODO list
 	
+	[ ] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
+	[ ] Hacer a sampleObject del tamaño del menú desplegado, para que no esté pixeleado
 	[ ] Agregar ctrl + z
 	[ ] Hacer más redonditas a las nubes, menos círculos
 		[ ] Evitar que grandes resoluciones hagan más feas las nubes
@@ -35,8 +37,10 @@
 			[ ] Hacer que muera al ser aplastado por el jugador
 
 	[ ] Hacer un botón de play
-		[ ] Cambiar imagen del botón a stop/play según el estado que se encuentre
-		[ ] Activar a los enemigos cuando le das a ese botón
+		[x] Hacer que al darle click cambie de estado el juego
+		[x] Hacer que sea un canvas para darle transparencia
+		[x] Cambiar imagen del botón a stop/play según el estado que se encuentre
+		[x] Activar a los enemigos cuando le das a ese botón
 		[ ] Activar al jugador cuando se active el botón
 
 	[ ] Hacer el jugador

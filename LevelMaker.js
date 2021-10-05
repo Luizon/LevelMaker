@@ -193,6 +193,9 @@ class Enemy {
 		this.floatX = this.x;
 		this.color = json.color || "#A00";
 		this.eyesColor = json.eyesColor || "#FFF";
+		this.xInit = json.x || 0;
+		this.hspeed = this.width / 15;
+		this.direction = 1; // 1 is right -1 is left
 		
 		destroyObject(this.x, this.y);
 
@@ -220,8 +223,24 @@ class Enemy {
 	
 	move() {
 		if(playing) {
-			// hace sus cosas de moverse
-		}
+			// girar si llega a un borde
+				if((this.x + this.width + this.hspeed > width && this.direction > 0)
+					|| (this.x - this.hspeed < 0 && this.direction < 0))
+					this.direction = -this.direction
+			// girar si topa con pared
+				let modifiedRect = {
+					x: this.x + this.hspeed*this.direction
+				}
+				if(blockCollision(this.getRect(modifiedRect)))
+					this.direction = -this.direction
+				this.x+= this.direction * this.hspeed;	
+				}
+			// girar si ya no pisa suelo
+			if(blockCollision(this.getRect({y: this.y + this.height})))
+				if(!blockCollision(this.getRect({x: this.x + this.width, y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
+					this.direction = -1;
+				else if(!blockCollision(this.getRect({x: this.x - this.width + Math.ceil(this.hspeed), y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
+					this.direction = 1;
 		this.moveEyes();
 		this.updateCanvas();
 	}
@@ -232,12 +251,23 @@ class Enemy {
 		}
 	}
 
-	getRect() {
+	getRect(rect) {
 		return {
-			x: this.x,
-			y: this.y,
-			width: this.width,
-			height: this.height,
+			x: rect.x || this.x,
+			y: rect.y + 1 || this.y + 1, // para evitar chocar con techo
+			width: rect.width || this.width,
+			height: rect.height || this.height - 2, // para evitar chocar con suelo
+		}
+	}
+	
+	getReducedRect() {
+		let redX = this.width / 6;
+		let redY = this.height / 6;
+		return {
+			x: this.x + redX,
+			y: this.y + redY,
+			width: this.width - 2*redX,
+			height: this.height - 2*redY,
 		}
 	}
 }
@@ -255,6 +285,8 @@ class Player {
 		this.floatX = this.x;
 		this.color = json.color || "#0A0";
 		this.eyesColor = json.eyesColor || "#FFF";
+		this.xInit = json.x || 0;
+		this.yInit = json.y || 0;
 		
 		destroyObject(this.x, this.y);
 		
@@ -497,19 +529,58 @@ class Board {
 				borderRadius: sampleObjectCanvas.width/4,
 				color: "#FFF",
 			};
+			
+			// a canvas for the button
+				// start the canvas
+				let playCanvas = document.createElement('canvas')
+				let stopCanvas = document.createElement('canvas')
+				playCanvas.width = sampleObjectCanvas.width;
+				stopCanvas.width = sampleObjectCanvas.width;
+				playCanvas.height = sampleObjectCanvas.height;
+				stopCanvas.height = sampleObjectCanvas.height;
+				let playCtx = playCanvas.getContext('2d');
+				let stopCtx = stopCanvas.getContext('2d');
+				// paint on the canvas
+				playCtx.fillStyle = "#0A0";
+				stopCtx.fillStyle = "#A00";
+				drawRoundedRect(this.undisplayedBoardSampleObjectBox, playCtx);
+				drawRoundedRect(this.undisplayedBoardSampleObjectBox, stopCtx);
+				playCtx.fillStyle = "#FFF";
+				stopCtx.fillStyle = "#FFF";
+				let valor = this.undisplayedBoardSampleObjectBox.width/4;
+				drawRect({x: valor, y: valor, width:valor*2, height: valor*2}, stopCtx)
+				drawTriangle({x: valor, y: valor, width:valor*2, height: valor*2}, playCtx)
+				//dibujar un triángulo para stop
+				
+			this.buttonPlay = { // this one IS drawn in the main canvas
+				x: width - playCanvas.width/5 * 6,
+				y: playCanvas.width/5,
+				width: playCanvas.width,
+				height: playCanvas.height,
+				playCanvas: playCanvas, //"#0A0",
+				stopCanvas: stopCanvas //"#A00"
+			};			
 	}
 	
 	draw(ctx) {
 		if(this.displayed) {
 			this.drawBoard(ctx);
 		}
-		else {
+		else { // No está desplegado el menú
 			sampleObjetcCtx.fillStyle = this.undisplayedBoardSampleObjectBox.color;
 			drawRoundedRect(this.undisplayedBoardSampleObjectBox, sampleObjetcCtx);
 			sampleObject[selectedObject].draw(sampleObjetcCtx);
-			ctx.globalAlpha = ".5";
 			let position = sampleObjectCanvas.width/5;
+			ctx.globalAlpha = ".5";
 			ctx.drawImage(sampleObjectCanvas, position, position);
+			ctx.globalAlpha = "1";
+			
+			// playing
+			let thePlayImage = this.buttonPlay.playCanvas;
+			if(playing)
+				thePlayImage = this.buttonPlay.stopCanvas;
+			ctx.globalAlpha = ".5";
+			ctx.drawImage(thePlayImage, this.buttonPlay.x, this.buttonPlay.y)
 			ctx.globalAlpha = "1";
 		}
 	}
@@ -814,6 +885,10 @@ canvas.addEventListener("mousedown", md => {
 			board.displayed = !board.displayed;
 			return;
 		}
+		else if(pointCollision(md.x, md.y, board.buttonPlay)) {
+			playing = !playing;
+			return;
+		}
 	}
 	else {
 		if(pointCollision(md.x, md.y, board.closeBoard)) {
@@ -865,13 +940,9 @@ canvas.addEventListener("mousemove", mm => {
 
 // key events, if the user have a keyboard
 window.addEventListener("keydown", key => {
-	//console.log(key.keyCode);
+	console.log(key.keyCode);
 	if(key.keyCode == 27) { // Escape
 		board.displayed = !board.displayed;
-		return;
-	}
-	if(key.keyCode == 71) { // G key
-		displayedGrid = !displayedGrid;
 		return;
 	}
 	if(key.keyCode == 37) { // Left arrow
@@ -882,11 +953,19 @@ window.addEventListener("keydown", key => {
 		rightArrowFunction();
 		return;
 	}
-	if(key.keyCode == 88) { // Right arrow
+	if(key.keyCode == 71) { // G key
+		displayedGrid = !displayedGrid;
+		return;
+	}
+	if(key.keyCode == 80) { // P key
+		playing = !playing;
+		return;
+	}
+	if(key.keyCode == 88) { // X key
 		setGridX();
 		return;
 	}
-	if(key.keyCode == 89) { // Right arrow
+	if(key.keyCode == 89) { // Y key
 		setGridY();
 		return;
 	}
@@ -927,6 +1006,7 @@ function leftArrowFunction() {
 	else
 		selectedObject--;
 }
+
 function rightArrowFunction() {
 	if(selectedObject >= sampleObject.length - 1) // el máximo, de momento
 		selectedObject = 0;
