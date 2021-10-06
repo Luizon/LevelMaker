@@ -42,6 +42,9 @@ var clouds = [],
 	sampleObject = [],
 	player = [],
 	board;
+	
+// counters
+var enemyCounter = 0;
 
 function initializeEverything() {
 	// constants
@@ -131,7 +134,7 @@ class Eraser {
 		drawRect({x:0, y:this.height/3*2, width:this.width, height:this.height/6}, this.canvasCtx);
 	}
 	draw(ctx) {
-		ctx.drawImage(this.canvas, this.x, this.y);
+		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
 	}
 }
 
@@ -167,7 +170,7 @@ class Block {
 	}
 	
 	draw(ctx) {
-		ctx.drawImage(this.canvas, this.x, this.y);
+		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
 	}
 	
 	getRect() {
@@ -182,18 +185,19 @@ class Block {
 
 class Enemy {
 	constructor(json) {
+		this.id = json.id || 1;
 		this.name = 'enemy';
 		this.width = json.width || gridWidth;
 		this.height = json.width || gridHeight;
 		this.x = json.x || 0;
 		this.y = json.y || 0;
+		this.xInit = json.x || 0;
 		this.eyesX = this.width/2;
 		this.eyesY = this.height/4;
 		this.floatY = this.y;
 		this.floatX = this.x;
 		this.color = json.color || "#A00";
 		this.eyesColor = json.eyesColor || "#FFF";
-		this.xInit = json.x || 0;
 		this.hspeed = this.width / 15;
 		this.direction = 1; // 1 is right -1 is left
 		
@@ -218,7 +222,7 @@ class Enemy {
 	}
 	
 	draw(ctx) {
-		ctx.drawImage(this.canvas, this.x, this.y);
+		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
 	}
 	
 	move() {
@@ -236,11 +240,18 @@ class Enemy {
 				this.x+= this.direction * this.hspeed;	
 				}
 			// girar si ya no pisa suelo
-			if(blockCollision(this.getRect({y: this.y + this.height})))
-				if(!blockCollision(this.getRect({x: this.x + this.width, y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
-					this.direction = -1;
-				else if(!blockCollision(this.getRect({x: this.x - this.width + Math.ceil(this.hspeed), y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
-					this.direction = 1;
+				if(blockCollision(this.getRect({y: this.y + this.height})))
+					if(!blockCollision(this.getRect({x: this.x + this.width, y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
+						this.direction = -1;
+					else if(!blockCollision(this.getRect({x: this.x - this.width + Math.ceil(this.hspeed), y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
+						this.direction = 1;
+			// girar al chocar con otro enemigo
+				enemys.forEach( (other, id) => {
+					if(collides(this.getReducedRect(), other.getReducedRect()) && other.id != this.id) {
+						other.direction = -other.direction;
+						this.direction = -this.direction;
+					}
+				})
 		this.moveEyes();
 		this.updateCanvas();
 	}
@@ -309,7 +320,7 @@ class Player {
 	}
 	
 	draw(ctx) {
-		ctx.drawImage(this.canvas, this.x, this.y);
+		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
 	}
 	
 	move() {
@@ -467,6 +478,13 @@ class Board {
 				height: this.topHeight/4,
 				color: "#FFF",
 			};
+			this.eraseAll = {
+				x: width - sampleObjectCanvas.width/5 - this.topHeight/4,
+				y: sampleObjectCanvas.width/5,
+				width: this.topHeight/4,
+				height: this.topHeight/4,
+				color: "#FFF",
+			};
 			this.displayedBoardSampleObjectBox = {
 				x: (width - displayedBoardSampleObjectBoxSize) / 2,
 				y: (this.topHeight - displayedBoardSampleObjectBoxSize) / 2,
@@ -541,16 +559,21 @@ class Board {
 				let playCtx = playCanvas.getContext('2d');
 				let stopCtx = stopCanvas.getContext('2d');
 				// paint on the canvas
-				playCtx.fillStyle = "#0A0";
-				stopCtx.fillStyle = "#A00";
-				drawRoundedRect(this.undisplayedBoardSampleObjectBox, playCtx);
-				drawRoundedRect(this.undisplayedBoardSampleObjectBox, stopCtx);
 				playCtx.fillStyle = "#FFF";
 				stopCtx.fillStyle = "#FFF";
-				let valor = this.undisplayedBoardSampleObjectBox.width/4;
-				drawRect({x: valor, y: valor, width:valor*2, height: valor*2}, stopCtx)
-				drawTriangle({x: valor, y: valor, width:valor*2, height: valor*2}, playCtx)
-				//dibujar un triángulo para stop
+				drawRoundedRect(this.undisplayedBoardSampleObjectBox, playCtx);
+				drawRoundedRect(this.undisplayedBoardSampleObjectBox, stopCtx);
+				playCtx.fillStyle = "#0A0";
+				stopCtx.fillStyle = "#A00";
+				let valor = this.undisplayedBoardSampleObjectBox.width/5;
+				let rect = {
+					x: valor,
+					y: valor,
+					width: valor*3,
+					height: valor*3
+				}
+				drawRect(rect, stopCtx)
+				drawTriangle(rect, playCtx)
 				
 			this.buttonPlay = { // this one IS drawn in the main canvas
 				x: width - playCanvas.width/5 * 6,
@@ -618,10 +641,10 @@ class Board {
 			drawLine(crossedLine, ctx);
 			drawLine(crossedLine.x2, crossedLine.y1, crossedLine.x1, crossedLine.y2, ctx);
 			
-			// white box
+			// white sample object box
 			ctx.fillStyle = "#FFF";
 			drawRoundedRect(this.displayedBoardSampleObjectBox, ctx);			
-			// object image
+			// sample object image
 			ctx.drawImage(sampleObject[selectedObject].canvas,
 				this.displayedBoardSampleObjectImage.x,
 				this.displayedBoardSampleObjectImage.y,
@@ -646,6 +669,36 @@ class Board {
 			ctx.fillStyle = "#845FCC";
 			drawTriangle(this.rightArrow, ctx);
 			drawTriangle(this.leftArrow, ctx);
+			
+			// trash can
+			ctx.fillStyle = this.eraseAll.color;
+			drawRoundedRect(this.eraseAll, ctx);
+			ctx.fillStyle = "#000"
+			let trash1 = {
+				x: this.eraseAll.x + this.eraseAll.width/8*3,
+				y: this.eraseAll.y + this.eraseAll.height/5,
+				width: this.eraseAll.width/4,
+				height: this.eraseAll.height/20
+			}
+			let trash2 = {
+				x: this.eraseAll.x + this.eraseAll.width/4,
+				y: this.eraseAll.y + this.eraseAll.height/20*5,
+				width: this.eraseAll.width/2,
+				height: this.eraseAll.height/10
+			}
+			let trashTrapeze = {
+				x1: trash2.x,
+				y1: trash2.y + this.eraseAll.height/20*3,
+				x2: trash2.x + trash2.width,
+				y2: trash2.y + this.eraseAll.height/20*3,
+				x3: trash2.x + trash2.width/4*3,
+				y3: trash2.y + this.eraseAll.height/5*3,
+				x4: trash2.x + trash2.width/4,
+				y4: trash2.y + this.eraseAll.height/5*3
+			}
+			drawRect(trash1, ctx);
+			drawRect(trash2, ctx);
+			drawTrapeze(trashTrapeze, ctx);
 		
 		// bottom things
 			// grid buttom
@@ -787,6 +840,41 @@ function drawGrid(ctx) {
 	}
 }
 
+
+function drawTrapeze(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
+	let x1, x2, x3, x4, y1, y2, y3, y4, ctx;
+	if(typeof arg1.x1 != "undefined") {
+		x1 = arg1.x1;
+		x2 = arg1.x2;
+		x3 = arg1.x3;
+		x4 = arg1.x4;
+		y1 = arg1.y1;
+		y2 = arg1.y2;
+		y3 = arg1.y3;
+		y4 = arg1.y4;
+		ctx = arg2;
+	}
+	else {
+		x1 = arg1;
+		x2 = arg2;
+		x3 = arg3;
+		x4 = arg4;
+		y1 = arg5;
+		y2 = arg6;
+		y3 = arg7;
+		y4 = arg8;
+		ctx = arg9;
+	}
+	
+	ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
+    ctx.lineTo(x4, y4);
+    ctx.closePath();
+    ctx.fill();
+}
+
 function drawTriangle(obj, ctx) {
 	/*
 		this boy accepts two forms: a rectangle and a primitive triangle
@@ -886,7 +974,7 @@ canvas.addEventListener("mousedown", md => {
 			return;
 		}
 		else if(pointCollision(md.x, md.y, board.buttonPlay)) {
-			playing = !playing;
+			playFunction();
 			return;
 		}
 	}
@@ -917,6 +1005,11 @@ canvas.addEventListener("mousedown", md => {
 		}
 		if(pointCollision(md.x, md.y, board.gridXButtom)) {
 			setGridX();
+			return;
+		}
+		
+		if(pointCollision(md.x, md.y, board.eraseAll)) {
+			deleteEverything();
 			return;
 		}
 	}
@@ -958,7 +1051,7 @@ window.addEventListener("keydown", key => {
 		return;
 	}
 	if(key.keyCode == 80) { // P key
-		playing = !playing;
+		playFunction();
 		return;
 	}
 	if(key.keyCode == 88) { // X key
@@ -998,6 +1091,14 @@ function deleteEverything() {
 	player.splice(0, player.length);
 	blocks.splice(0, blocks.length);
 	enemys.splice(0, enemys.length);
+}
+
+function playFunction() {
+	playing = !playing;
+	enemys.forEach( (enemy) => {
+		enemy.x = enemy.xInit;
+		enemy.direction = 1;
+	});
 }
 
 function leftArrowFunction() {
@@ -1055,18 +1156,22 @@ function clicking() {
 				if(!rightClick) {
 					switch(selectedObject) {
 						case constBlock:
+							if(!playing)
 							new Block({
 								x: x,
 								y: y
 							});
 							break;
 						case constEnemy:
+							if(!playing)
 							new Enemy({
+								id: ++enemyCounter,
 								x: x,
 								y: y
 							});
 							break;
 						case constPlayer:
+							if(!playing)
 							new Player({
 								x: x,
 								y: y

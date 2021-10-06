@@ -15,8 +15,8 @@
 
 #### TODO list
 	
-	[ ] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
-	[ ] Hacer a sampleObject del tamaño del menú desplegado, para que no esté pixeleado
+	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
+	[ ] Hacer que el objeto del menú desplegado no se vea pixeleado
 	[ ] Agregar ctrl + z
 	[ ] Hacer más redonditas a las nubes, menos círculos
 		[ ] Evitar que grandes resoluciones hagan más feas las nubes
@@ -28,7 +28,8 @@
 		[x] Hacer que reconozca cuando choca con el borde del nivel y se devuelva
 		[x] Hacer que pueda reconocer si pisa suelo para avanzar, y al llegar a un borde dar vuelta
 		[x] Hacer que reconozca paredes, sacando curva antes de chocar con una
-		[ ] Hacer que reconozca a otros enemigos, sacando curva en cuanto choque con uno
+		[x] Hacer que reconozca a otros enemigos, sacando curva en cuanto choque con uno
+		[x] Hacer que no sea posible poner enemigos cuando se está playing
 		[ ] Hacer un estado de muerte
 			[ ] Detenerse al morir
 			[ ] Desactivar al morir
@@ -42,6 +43,9 @@
 		[x] Cambiar imagen del botón a stop/play según el estado que se encuentre
 		[x] Activar a los enemigos cuando le das a ese botón
 		[ ] Activar al jugador cuando se active el botón
+		[ ] Devolver a los enemigos y al jugador a su posición original y resetear las variables
+			[x] Para el enemigo
+			[ ] Para el jugador
 
 	[ ] Hacer el jugador
 		[x] Hacer dos variables de posición inicial para devolver al jugador cuando el juego tenga playing = false o cuando muera
