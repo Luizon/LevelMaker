@@ -16,11 +16,14 @@
 #### TODO list
 	
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
-	[ ] Hacer que el objeto del menú desplegado no se vea pixeleado
+	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
 	[ ] Agregar ctrl + z
-	[ ] Hacer más redonditas a las nubes, menos círculos
-		[ ] Evitar que grandes resoluciones hagan más feas las nubes
-
+	
+	[ ] Mejorar las nubes
+		[ ] Hacer más redonditas a las nubes, menos círculos
+			[ ] Evitar que grandes resoluciones hagan más feas las nubes
+		[x] Hacer que la cantidad de nubes sea relativo a la anchura de ventana
+	
 	[ ] Hacer un IA para el enemigo
 		[x] Hacer una variable de posición inicial para devolver al enemigo cuando el juego tenga playing = false
 		[x] Hacer una función para retornar una hitbox reducida, para fines prácticos
@@ -66,8 +69,3 @@
 			[ ] Detenerse al morir
 			[ ] Devolver al inicio trás morir
 			[ ] Dar muerte cuando tocas a un enemigo y no es cayéndole encima
-			
-
-#### Bugs
-	[x] El enemigo se queda atascado si le pones un bloque arriba o abajo, como si constantemente chocara
-	

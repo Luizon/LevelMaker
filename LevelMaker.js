@@ -80,7 +80,8 @@ function initializeEverything() {
 	
 	// objects
 	board = new Board();
-	for(let i=0; i < 6; i++)
+	let cloudsLength = Math.floor(width / height * 10)
+	for(let i=0; i < cloudsLength; i++)
 	    clouds.push(new Cloud({}));
 	var json = {
 		x: sampleObjectCanvas.width/6,
@@ -493,12 +494,30 @@ class Board {
 				borderRadius: displayedBoardSampleObjectBoxSize/5,
 			};
 			let displayedBoardSampleObjectImageSize = 2 * this.displayedBoardSampleObjectBox.width/3;
-			this.displayedBoardSampleObjectImage = {
+			let image = {
 				x: (width - displayedBoardSampleObjectImageSize)/2,
 				y: (this.topHeight - displayedBoardSampleObjectImageSize) / 2,
 				width: displayedBoardSampleObjectImageSize,
-				height: displayedBoardSampleObjectImageSize
+				height: displayedBoardSampleObjectImageSize,
+				specialObject: true
 			};
+			this.displayedBoardSampleObject = [];
+			for(let i=0; i <= constPlayer; i++) {
+				switch(i) {
+						case constEraser:
+							this.displayedBoardSampleObject.push(new Eraser(image));
+							break;
+						case constBlock:
+							this.displayedBoardSampleObject.push(new Block(image));
+							break;
+						case constEnemy:
+							this.displayedBoardSampleObject.push(new Enemy(image));
+							break;
+						case constPlayer:
+							this.displayedBoardSampleObject.push(new Player(image));
+							break;
+					}
+				}
 			this.leftArrow = {
 				x: this.displayedBoardSampleObjectBox.x - arrowSize/4,
 				y: (this.topHeight - arrowSize) / 2,
@@ -645,11 +664,9 @@ class Board {
 			ctx.fillStyle = "#FFF";
 			drawRoundedRect(this.displayedBoardSampleObjectBox, ctx);			
 			// sample object image
-			ctx.drawImage(sampleObject[selectedObject].canvas,
-				this.displayedBoardSampleObjectImage.x,
-				this.displayedBoardSampleObjectImage.y,
-				this.displayedBoardSampleObjectImage.width,
-				this.displayedBoardSampleObjectImage.height
+			ctx.drawImage(this.displayedBoardSampleObject[selectedObject].canvas,
+				this.displayedBoardSampleObject[selectedObject].x,
+				this.displayedBoardSampleObject[selectedObject].y
 			);
 			// sample object name
 			ctx.fillStyle = "#FFF";
@@ -660,10 +677,10 @@ class Board {
 				height: this.fontSize * 1.5,
 				borderRadius: this.fontSize/2,
 			}, ctx);
-			ctx.fillStyle = sampleObject[selectedObject].color;
-			drawString(this.displayedBoardSampleObjectImage.x,
-				this.displayedBoardSampleObjectImage.y + this.topHeight,
-				sampleObject[selectedObject].name, ctx);
+			ctx.fillStyle = this.displayedBoardSampleObject[selectedObject].color;
+			drawString(this.displayedBoardSampleObject[selectedObject].x,
+				this.displayedBoardSampleObject[selectedObject].y + this.topHeight,
+				this.displayedBoardSampleObject[selectedObject].name, ctx);
 			
 			// arrows
 			ctx.fillStyle = "#845FCC";
@@ -1009,7 +1026,7 @@ canvas.addEventListener("mousedown", md => {
 		}
 		
 		if(pointCollision(md.x, md.y, board.eraseAll)) {
-			deleteEverything();
+			deleteEverything(true);
 			return;
 		}
 	}
@@ -1087,10 +1104,15 @@ function anyCollision(object, array) {
 }
 
 
-function deleteEverything() {
+function deleteEverything(flag) {
+	if(typeof flag != 'undefined')
+		if(flag == true)
+			if(!confirm("Are you sure you want to clean the screan? You'll lose all your progress"))
+				return;
 	player.splice(0, player.length);
 	blocks.splice(0, blocks.length);
 	enemys.splice(0, enemys.length);
+	playing = false;
 }
 
 function playFunction() {
@@ -1237,13 +1259,8 @@ function pointCollision(x, y, rect) {
 }
 
 function setGridX(num) {
-	let answer = prompt('Are you sure you want to change the grid properties? You\'ll lose your advance. \nType \"yes\" if you accept this');
-	if(typeof answer != 'string')
+	if(!confirm('Are you sure you want to change the grid properties? \nYou\'ll lose your progress.'))
 		return;
-	else {
-		if(answer != "yes")
-			return;
-	}
 	let n = (typeof num == 'undefined') ? prompt('Type how much horizontal cells you want ') : num;
 	if(typeof n == 'string' || typeof n == 'number') {
 		if(isNaN(n)) {
@@ -1257,13 +1274,8 @@ function setGridX(num) {
 }
 
 function setGridY(num) {
-	let answer = prompt('Are you sure you want to change the grid properties? You\'ll lose your advance. \nType \"yes\" if you accept this');
-	if(typeof answer != 'string')
+	if(!confirm('Are you sure you want to change the grid properties? \nYou\'ll lose your progress.'))
 		return;
-	else {
-		if(answer != "yes")
-			return;
-	}
 	let n = (typeof num == 'undefined') ? prompt('Type how much vertical cells you want ') : num;
 	if(typeof n == 'string' || typeof n == 'number') {
 		if(isNaN(n)) {
