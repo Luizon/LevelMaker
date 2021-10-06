@@ -18,6 +18,7 @@
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
 	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
 	[ ] Agregar ctrl + z
+		[ ] Investigar como funciona esto ¿Es creando un historial de estados y cargándolos?
 	
 	[ ] Mejorar las nubes
 		[ ] Hacer más redonditas a las nubes, menos círculos
@@ -33,6 +34,9 @@
 		[x] Hacer que reconozca paredes, sacando curva antes de chocar con una
 		[x] Hacer que reconozca a otros enemigos, sacando curva en cuanto choque con uno
 		[x] Hacer que no sea posible poner enemigos cuando se está playing
+		[ ] Invertir la imagen cuando va a la izquierda
+			[x] Hacer el cambio de posición directo
+			[ ] Mover suavemente los ojos al girar
 		[ ] Hacer un estado de muerte
 			[ ] Detenerse al morir
 			[ ] Desactivar al morir
@@ -65,6 +69,12 @@
 			[ ] Hacer que el jugador de un mini salto trás chocar contra un enemigo desde arriba
 				[ ] Hacer que el enemigo muera cuando esto pase
 		[ ] Evitar que el jugador pueda salirse de los bordes del juego
+		[ ] Invertir la imagen cuando va a la izquierda
+			[ ] Hacer el cambio de posición directo
+			[ ] Mover suavemente los ojos al girar
+		[ ] Subir los ojos cuando el jugador sube y bajarlos cuando él baja
+			[ ] Hacer el cambio de posición directo
+			[ ] Hacer el movimiento fluido
 		[ ] Hacer un estado de muerte
 			[ ] Detenerse al morir
 			[ ] Devolver al inicio trás morir

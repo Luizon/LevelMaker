@@ -239,7 +239,7 @@ class Enemy {
 				if(blockCollision(this.getRect(modifiedRect)))
 					this.direction = -this.direction
 				this.x+= this.direction * this.hspeed;	
-				}
+				
 			// girar si ya no pisa suelo
 				if(blockCollision(this.getRect({y: this.y + this.height})))
 					if(!blockCollision(this.getRect({x: this.x + this.width, y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
@@ -253,14 +253,20 @@ class Enemy {
 						this.direction = -this.direction;
 					}
 				})
-		this.moveEyes();
-		this.updateCanvas();
+			this.moveEyes();
+		}
 	}
 	
 	moveEyes() {
-		if(!playing) {
-			
+		if(playing) {
+			if(this.direction > 0)
+				this.eyesX = this.width/2;
+			else
+				this.eyesX = 0;
+			this.updateCanvas();
 		}
+		else
+			this.eyesX = this.width/2;
 	}
 
 	getRect(rect) {
@@ -327,15 +333,20 @@ class Player {
 	move() {
 		if(playing) {
 			// hace sus cosas de moverse
+			this.moveEyes();
 		}
-		this.moveEyes();
-		this.updateCanvas();
 	}
 	
 	moveEyes() {
-		if(!playing) {
-			
+		if(playing) {
+			if(this.direction > 0)
+				this.eyesX = this.width/2;
+			else
+				this.eyesX = 0;
+			this.updateCanvas();
 		}
+		else
+			this.eyesX = this.width/2;
 	}
 
 	getRect() {
@@ -1120,7 +1131,16 @@ function playFunction() {
 	enemys.forEach( (enemy) => {
 		enemy.x = enemy.xInit;
 		enemy.direction = 1;
+		enemy.moveEyes();
+		enemy.updateCanvas();
 	});
+	player.forEach( (p) => {
+		p.x = p.xInit
+		p.y = p.yInit
+		p.direction = 1;
+		p.moveEyes();
+		p.updateCanvas();
+	})
 }
 
 function leftArrowFunction() {
