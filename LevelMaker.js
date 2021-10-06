@@ -32,6 +32,9 @@ var selectedObject = constBlock;
 // booleans
 var click,
 	rightClick,
+	leftKey,
+	rightKey,
+	upKey,
 	displayedGrid,
 	playing;
 
@@ -75,7 +78,7 @@ function initializeEverything() {
 	deletedObjectPoint = {x:-width, y:-width}
 
 	// booleans
-    playing = rightClick = click = false;
+    playing = rightClick = click = leftKey = rightKey = upKey = false;
 	displayedGrid = true;
 	
 	// objects
@@ -238,7 +241,6 @@ class Enemy {
 				}
 				if(blockCollision(this.getRect(modifiedRect)))
 					this.direction = -this.direction
-				this.x+= this.direction * this.hspeed;	
 				
 			// girar si ya no pisa suelo
 				if(blockCollision(this.getRect({y: this.y + this.height})))
@@ -253,6 +255,8 @@ class Enemy {
 						this.direction = -this.direction;
 					}
 				})
+				
+			this.x+= this.direction * this.hspeed;
 			this.moveEyes();
 		}
 	}
@@ -305,6 +309,7 @@ class Player {
 		this.eyesColor = json.eyesColor || "#FFF";
 		this.xInit = json.x || 0;
 		this.yInit = json.y || 0;
+		this.hspeed = this.width / 13;
 		
 		destroyObject(this.x, this.y);
 		
@@ -332,7 +337,18 @@ class Player {
 	
 	move() {
 		if(playing) {
-			// hace sus cosas de moverse
+			if(rightKey)
+				this.direction = 1;
+			else if(leftKey)
+				this.direction = -1;
+			if(rightKey || leftKey) {
+				let modifiedRect = {
+					x: this.x + this.hspeed * this.direction
+				}
+				if(!blockCollision(this.getRect(modifiedRect)))
+					this.x += this.hspeed * this.direction;
+			}
+			
 			this.moveEyes();
 		}
 	}
@@ -349,12 +365,12 @@ class Player {
 			this.eyesX = this.width/2;
 	}
 
-	getRect() {
+	getRect(rect) {
 		return {
-			x: this.x,
-			y: this.y,
-			width: this.width,
-			height: this.height,
+			x: rect.x || this.x,
+			y: rect.y + 1 || this.y + 1, // para evitar chocar con techo
+			width: rect.width || this.width,
+			height: rect.height || this.height - 2, // para evitar chocar con suelo
 		}
 	}
 }
@@ -620,13 +636,15 @@ class Board {
 			this.drawBoard(ctx);
 		}
 		else { // No está desplegado el menú
-			sampleObjetcCtx.fillStyle = this.undisplayedBoardSampleObjectBox.color;
-			drawRoundedRect(this.undisplayedBoardSampleObjectBox, sampleObjetcCtx);
-			sampleObject[selectedObject].draw(sampleObjetcCtx);
-			let position = sampleObjectCanvas.width/5;
-			ctx.globalAlpha = ".5";
-			ctx.drawImage(sampleObjectCanvas, position, position);
-			ctx.globalAlpha = "1";
+			if(!playing) {
+				sampleObjetcCtx.fillStyle = this.undisplayedBoardSampleObjectBox.color;
+				drawRoundedRect(this.undisplayedBoardSampleObjectBox, sampleObjetcCtx);
+				sampleObject[selectedObject].draw(sampleObjetcCtx);
+				let position = sampleObjectCanvas.width/5;
+				ctx.globalAlpha = ".5";
+				ctx.drawImage(sampleObjectCanvas, position, position);
+				ctx.globalAlpha = "1";
+			}
 			
 			// playing
 			let thePlayImage = this.buttonPlay.playCanvas;
@@ -997,11 +1015,12 @@ canvas.addEventListener("mousedown", md => {
 			width: board.undisplayedBoardSampleObjectBox.width,
 			height: board.undisplayedBoardSampleObjectBox.height,
 		}
-		if(pointCollision(md.x, md.y, sampleObjectButtom)) {
-			board.displayed = !board.displayed;
-			return;
-		}
-		else if(pointCollision(md.x, md.y, board.buttonPlay)) {
+		if(!playing)
+			if(pointCollision(md.x, md.y, sampleObjectButtom)) {
+				board.displayed = !board.displayed;
+				return;
+			}
+		if(pointCollision(md.x, md.y, board.buttonPlay)) {
 			playFunction();
 			return;
 		}
@@ -1059,18 +1078,27 @@ canvas.addEventListener("mousemove", mm => {
 	mouseY = mm.y;
 })
 
-// key events, if the user have a keyboard
+// key events
 window.addEventListener("keydown", key => {
-	console.log(key.keyCode);
+	//console.log(key.keyCode);
 	if(key.keyCode == 27) { // Escape
-		board.displayed = !board.displayed;
+		if(!playing)
+			board.displayed = !board.displayed;
 		return;
 	}
 	if(key.keyCode == 37) { // Left arrow
+		leftKey = true;
+		rightKey = false;
 		leftArrowFunction();
 		return;
 	}
+	if(key.keyCode == 38) { // Up arrow
+		upKey = true;
+		return;
+	}
 	if(key.keyCode == 39) { // Right arrow
+		leftKey = false;
+		rightKey = true;
 		rightArrowFunction();
 		return;
 	}
@@ -1088,6 +1116,22 @@ window.addEventListener("keydown", key => {
 	}
 	if(key.keyCode == 89) { // Y key
 		setGridY();
+		return;
+	}
+});
+
+window.addEventListener("keyup", key => {
+	//console.log(key)
+	if(key.keyCode == 37) { // Left arrow
+		leftKey = false;
+		return;
+	}
+	if(key.keyCode == 38) { // Up arrow
+		upKey = false;
+		return;
+	}
+	if(key.keyCode == 39) { // Right arrow
+		rightKey = false;
 		return;
 	}
 });
@@ -1128,6 +1172,9 @@ function deleteEverything(flag) {
 
 function playFunction() {
 	playing = !playing;
+	if(playing) {
+		board.displayed = false;
+	}
 	enemys.forEach( (enemy) => {
 		enemy.x = enemy.xInit;
 		enemy.direction = 1;

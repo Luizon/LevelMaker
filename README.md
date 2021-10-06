@@ -4,16 +4,23 @@
 
 [try it online](https://luizon.github.io/LevelMaker/)
 
-## Keyboard shortcuts
-	
+## Editor keyboard shortcuts
+
 	ESC: Open the editor menu
 	Right/Left key: Change the selected object
 	P: play
 	G: grid / ungrid
 	X: Change the horizontal number of cells
-	Y: Change the horizontal number of cells
+	Y: Change the vertical number of cells
 
-#### TODO list
+## Game controls
+
+	Right/Left arrow key: Move sideways
+	Up arrow key: Jump
+	P: stop
+	
+	
+## TODO list
 	
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
 	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
@@ -57,12 +64,14 @@
 	[ ] Hacer el jugador
 		[x] Hacer dos variables de posición inicial para devolver al jugador cuando el juego tenga playing = false o cuando muera
 		[ ] Darle jugabilidad
-			[ ] Hacer que el juego reconozca las teclas
-			[ ] Hacer que el jugador se mueva lateralmente presionando izquierda y derecha
-			[ ] Crear un sistema de choque lateral con los bloques
+			[x] Hacer que el juego reconozca las teclas
+			[x] Hacer que el jugador se mueva lateralmente presionando izquierda y derecha
+			[x] Crear un sistema de choque lateral con los bloques
 			[ ] Crear un sistema de gravedad
-			[ ] Crear un sistema de suelo para los bloques
 			[ ] Hacer que el jugador salte al presionar arriba
+				[ ] Hacer que se eleve al presionar el botón de salto
+				[ ] Hacer que el salto sea más alto o más bajo si mantiene o no más tiempo el botón de salto
+			[ ] Crear un sistema de suelo para los bloques
 			[ ] Limitar los saltos, solo puedes saltar si estás pisando suelo
 			[ ] Hacer que el jugador deje de subir al chocar contra un block desde abajo
 			[ ] Hacer que el jugador deje de bajar al chocar contra un block desde arriba
