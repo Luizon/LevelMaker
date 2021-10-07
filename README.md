@@ -26,6 +26,7 @@
 	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
 	[ ] Agregar ctrl + z
 		[ ] Investigar como funciona esto ¿Es creando un historial de estados y cargándolos?
+		[ ] Hacer el sistema de ctrl + z
 	
 	[ ] Mejorar las nubes
 		[ ] Hacer más redonditas a las nubes, menos círculos
@@ -67,24 +68,27 @@
 			[x] Hacer que el juego reconozca las teclas
 			[x] Hacer que el jugador se mueva lateralmente presionando izquierda y derecha
 			[x] Crear un sistema de choque lateral con los bloques
-			[ ] Crear un sistema de gravedad
-			[ ] Hacer que el jugador salte al presionar arriba
-				[ ] Hacer que se eleve al presionar el botón de salto
-				[ ] Hacer que el salto sea más alto o más bajo si mantiene o no más tiempo el botón de salto
-			[ ] Crear un sistema de suelo para los bloques
-			[ ] Limitar los saltos, solo puedes saltar si estás pisando suelo
-			[ ] Hacer que el jugador deje de subir al chocar contra un block desde abajo
-			[ ] Hacer que el jugador deje de bajar al chocar contra un block desde arriba
-			[ ] Hacer que el jugador de un mini salto trás chocar contra un enemigo desde arriba
-				[ ] Hacer que el enemigo muera cuando esto pase
-		[ ] Evitar que el jugador pueda salirse de los bordes del juego
+			[x] Crear un sistema de gravedad
+			[x] Hacer que el jugador salte al presionar arriba
+				[x] Hacer que se eleve al presionar el botón de salto
+				[x] Hacer que el salto sea más alto o más bajo si mantiene o no más tiempo el botón de salto
+			[x] Crear un sistema de suelo para los bloques
+			[x] Limitar los saltos, solo puedes saltar si estás pisando suelo
+			[x] Hacer que el jugador deje de subir al chocar contra un block desde abajo
+			[x] Hacer que el jugador deje de bajar al chocar contra un block desde arriba
+		[x] Evitar que el jugador pueda salirse de los bordes del juego
 		[ ] Invertir la imagen cuando va a la izquierda
-			[ ] Hacer el cambio de posición directo
+			[x] Hacer el cambio de posición directo
 			[ ] Mover suavemente los ojos al girar
-		[ ] Subir los ojos cuando el jugador sube y bajarlos cuando él baja
-			[ ] Hacer el cambio de posición directo
-			[ ] Hacer el movimiento fluido
+		[x] Subir los ojos cuando el jugador sube y bajarlos cuando él baja
+			[x] Hacer el cambio de posición directo
+			[x] Hacer el movimiento fluido
 		[ ] Hacer un estado de muerte
 			[ ] Detenerse al morir
 			[ ] Devolver al inicio trás morir
 			[ ] Dar muerte cuando tocas a un enemigo y no es cayéndole encima
+		[ ] Mata al enemigo al caer sobre él
+			[ ] El enemigo muere
+			[ ] Jugador da un pequeño salto al matarlo
+		[ ] Muere al tocar al enemigo
+		[ ] Muere al caer al vacío

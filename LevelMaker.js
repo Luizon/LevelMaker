@@ -310,6 +310,11 @@ class Player {
 		this.xInit = json.x || 0;
 		this.yInit = json.y || 0;
 		this.hspeed = this.width / 13;
+		this.vspeed = 0;
+		this.maxVspeed = this.height/3;
+		this.gravity = this.height/100;
+		this.hasJump = true;
+		this.holdJump = true;
 		
 		destroyObject(this.x, this.y);
 		
@@ -337,6 +342,48 @@ class Player {
 	
 	move() {
 		if(playing) {
+			// gravity system
+				let modifiedRect = {
+					y: this.y + this.vspeed + 1
+				}
+				if(blockCollision(this)) {
+					blocks.forEach( (b) => {
+						if(collides(b, this)) {
+							if(b.y > this.y + this.height/2) {
+								this.vspeed = 0;
+								this.hasJump = this.holdJump = true;
+								this.y = this.y - this.y % gridHeight;
+							}
+							else if(b.y < this.y - this.height/2) {
+								this.y = this.y + Math.abs(this.vspeed); //- this.y % gridHeight + gridHeight;
+								this.vspeed = 0;
+							}
+						}
+					});
+				}
+				/*if(blockCollision(this.getRect(modifiedRect))) {
+					this.vspeed = 0;
+					this.hasJump = this.holdJump = true;
+					//this.y = this.y - this.y % gridHeight;
+				}*/
+				else {
+					if(this.vspeed < this.height/3)
+						if(this.holdJump && this.vspeed < 0)
+							this.vspeed += this.gravity / 1.6;
+						else
+							this.vspeed += this.gravity;
+					else
+						this.vspeed = this.maxVspeed;
+				}
+			// jump system
+				if(this.hasJump && upKey && blockCollision(this.getRect(modifiedRect))) {
+					this.vspeed = -this.height/5;
+					this.hasJump = false;
+				}
+			
+			this.y += this.vspeed;
+			
+			// sideways movement
 			if(rightKey)
 				this.direction = 1;
 			else if(leftKey)
@@ -345,7 +392,8 @@ class Player {
 				let modifiedRect = {
 					x: this.x + this.hspeed * this.direction
 				}
-				if(!blockCollision(this.getRect(modifiedRect)))
+				if(!blockCollision(this.getRect(modifiedRect)) // if there's no wall
+					&& modifiedRect.x > 0 && modifiedRect.x < width - this.width) // if player is inside the screen
 					this.x += this.hspeed * this.direction;
 			}
 			
@@ -359,10 +407,17 @@ class Player {
 				this.eyesX = this.width/2;
 			else
 				this.eyesX = 0;
+			
+			let r = this.getRect({x: this.x});
+			let newEyesPosition = Math.max(0, Math.min(r.height/2, r.height/4 + this.vspeed/this.maxVspeed*r.height));//r.height/5 + this.vspeed/this.maxSpeed*(r.height/2)));
+			this.eyesY = newEyesPosition;
+
 			this.updateCanvas();
 		}
-		else
+		else {
 			this.eyesX = this.width/2;
+			this.eyesY = this.height/4;
+		}
 	}
 
 	getRect(rect) {
@@ -1094,6 +1149,9 @@ window.addEventListener("keydown", key => {
 	}
 	if(key.keyCode == 38) { // Up arrow
 		upKey = true;
+		player.forEach( p => {
+			p.holdJump = true;
+		})
 		return;
 	}
 	if(key.keyCode == 39) { // Right arrow
@@ -1128,6 +1186,9 @@ window.addEventListener("keyup", key => {
 	}
 	if(key.keyCode == 38) { // Up arrow
 		upKey = false;
+		player.forEach( p => {
+			p.holdJump = false;
+		})
 		return;
 	}
 	if(key.keyCode == 39) { // Right arrow
@@ -1185,23 +1246,26 @@ function playFunction() {
 		p.x = p.xInit
 		p.y = p.yInit
 		p.direction = 1;
+		p.vspeed = 0;
 		p.moveEyes();
 		p.updateCanvas();
 	})
 }
 
 function leftArrowFunction() {
-	if(selectedObject <= 0)
-		selectedObject = sampleObject.length - 1; // el máximo, de momento
-	else
-		selectedObject--;
+	if(!playing)
+		if(selectedObject <= 0)
+			selectedObject = sampleObject.length - 1; // el máximo, de momento
+		else
+			selectedObject--;
 }
 
 function rightArrowFunction() {
-	if(selectedObject >= sampleObject.length - 1) // el máximo, de momento
-		selectedObject = 0;
-	else
-		selectedObject++;
+	if(!playing)
+		if(selectedObject >= sampleObject.length - 1) // el máximo, de momento
+			selectedObject = 0;
+		else
+			selectedObject++;
 }
 
 function singleClick(clickX, clickY) {
