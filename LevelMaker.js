@@ -204,6 +204,8 @@ class Enemy {
 		this.eyesColor = json.eyesColor || "#FFF";
 		this.hspeed = this.width / 15;
 		this.direction = 1; // 1 is right -1 is left
+		this.alpha = json.alpha || 1;
+		this.living = true;
 		
 		destroyObject(this.x, this.y);
 
@@ -226,11 +228,13 @@ class Enemy {
 	}
 	
 	draw(ctx) {
+		ctx.globalAlpha = this.alpha;
 		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
+		ctx.globalAlpha = 1;
 	}
 	
 	move() {
-		if(playing) {
+		if(playing && this.living) {
 			// girar si llega a un borde
 				if((this.x + this.width + this.hspeed > width && this.direction > 0)
 					|| (this.x - this.hspeed < 0 && this.direction < 0))
@@ -259,10 +263,14 @@ class Enemy {
 			this.x+= this.direction * this.hspeed;
 			this.moveEyes();
 		}
+		if(!this.living)
+			this.alpha = .5;
+		else
+			this.alpha = 1;
 	}
 	
 	moveEyes() {
-		if(playing) {
+		if(playing && this.living) {
 			if(this.direction > 0)
 				this.eyesX = this.width/2;
 			else
@@ -361,6 +369,7 @@ class Player {
 						}
 					});
 				}
+				
 				/*if(blockCollision(this.getRect(modifiedRect))) {
 					this.vspeed = 0;
 					this.hasJump = this.holdJump = true;
@@ -397,8 +406,37 @@ class Player {
 					this.x += this.hspeed * this.direction;
 			}
 			
+			// enemy's interaction
+			if(enemyCollision(this)) {
+				enemys.forEach( (e) => {
+					if(collides(e, this)) {
+						if(e.living) {
+							let wellHeight = this.y + this.height/2 < e.y;
+							if(this.vspeed >= 0 && wellHeight) {
+								this.vspeed = -this.height/10;
+								e.living = false;
+							}
+							else {
+								this.die();
+							}
+						}
+					}
+				});
+			}
+			
+			if(this.y > height) {
+				this.die();
+			}
+			
 			this.moveEyes();
 		}
+	}
+	
+	die() {
+		this.x = this.xInit;
+		this.y = this.yInit;
+		this.direction = 1;
+		this.vspeed = 0;
 	}
 	
 	moveEyes() {
@@ -426,6 +464,17 @@ class Player {
 			y: rect.y + 1 || this.y + 1, // para evitar chocar con techo
 			width: rect.width || this.width,
 			height: rect.height || this.height - 2, // para evitar chocar con suelo
+		}
+	}
+	
+	getReducedRect() {
+		let redX = this.width / 6;
+		let redY = this.height / 6;
+		return {
+			x: this.x + redX,
+			y: this.y + redY,
+			width: this.width - 2*redX,
+			height: this.height - redY,
 		}
 	}
 }
@@ -1241,6 +1290,7 @@ function playFunction() {
 		enemy.direction = 1;
 		enemy.moveEyes();
 		enemy.updateCanvas();
+		enemy.living = true;
 	});
 	player.forEach( (p) => {
 		p.x = p.xInit
@@ -1269,27 +1319,34 @@ function rightArrowFunction() {
 }
 
 function singleClick(clickX, clickY) {
-	var x = clickX || mouseX,
+	let x = clickX || mouseX,
 		y = clickY || mouseY;
-	var thereIsADeletedObject = false;
-	blocks.forEach( (block, i) => {
-		if(pointCollision(x, y, block) && selectedObject === constBlock) {
-			blocks.splice(i, 1);
-			thereIsADeletedObject = true;
-		}
-	});
-	enemys.forEach( (enemy, i) => {
-		if(pointCollision(x, y, enemy) && selectedObject === constEnemy) {
-			enemys.splice(i, 1);
-			thereIsADeletedObject = true;
-		}
-	});
-	player.forEach( (p, i) => {
-		if(pointCollision(x, y, p) && selectedObject === constPlayer) {
-			player.splice(i, 1);
-			thereIsADeletedObject = true;
-		}
-	});
+	let thereIsADeletedObject = false;
+	let objects = []
+	objects.push(blocks);
+	objects.push(enemys);
+	objects.push(player);
+	if(!playing) {
+		blocks.forEach( (block, i) => {
+			if(pointCollision(x, y, block) && selectedObject === constBlock) {
+				blocks.splice(i, 1);
+				thereIsADeletedObject = true;
+			}
+		});
+		enemys.forEach( (enemy, i) => {
+			if(pointCollision(x, y, enemy) && selectedObject === constEnemy) {
+				enemys.splice(i, 1);
+				thereIsADeletedObject = true;
+			}
+		});
+		player.forEach( (p, i) => {
+			if(pointCollision(x, y, p) && selectedObject === constPlayer) {
+				player.splice(i, 1);
+				thereIsADeletedObject = true;
+			}
+		});
+	}
+	/**/
 	if(!thereIsADeletedObject)
 		clicking();
 	else {
@@ -1300,12 +1357,13 @@ function singleClick(clickX, clickY) {
 
 function clicking() {
 	if((mouseY > board.topHeight && mouseY < height - board.bottomHeight) || !board.displayed) {
-		if(pointDistance(deletedObjectPoint, {x: mouseX, y: mouseY}) > Math.min(width, height) / 4) {
+		if(pointDistance(deletedObjectPoint, {x: mouseX, y: mouseY}) > Math.max(gridHeight, gridWidth)) {
 			deletedObjectPoint.x = deletedObjectPoint.y = -width;
 			if(click) {
 				let x = mouseX - mouseX % gridWidth,
 					y = mouseY - mouseY % gridHeight;
-				destroyObject(x, y);
+				if(!playing)
+					destroyObject(x, y);
 				if(!rightClick) {
 					switch(selectedObject) {
 						case constBlock:

@@ -22,8 +22,11 @@
 	
 ## TODO list
 	
+	[ ] El enemigo revive cuando mueres, wtf, eso no estaba planeado
+	
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
 	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
+	[x] Evitar que se pueda borrar objetos en modo play
 	[ ] Agregar ctrl + z
 		[ ] Investigar como funciona esto ¿Es creando un historial de estados y cargándolos?
 		[ ] Hacer el sistema de ctrl + z
