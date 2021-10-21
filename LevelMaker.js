@@ -160,21 +160,62 @@ class Block {
 		this.canvas.width = this.width;
 		this.canvas.height = this.height;
 		this.canvasCtx = this.canvas.getContext('2d');
-		this.updateCanvas();
+		this.updateCanvas(false);
 		
 		if(!json.specialObject)
 			blocks.push(this);
 	}
 	
-	updateCanvas() {
+	updateCanvas(flag) {
 		this.canvasCtx.fillStyle = this.color;
 		drawRect({x:0, y:0, width:this.width, height:this.height,}, this.canvasCtx);
+
 		this.canvasCtx.fillStyle = this.grassColor;
-		drawRect({x:0, y:0, width:this.width, height:this.height/3,}, this.canvasCtx);
+		let up = {x: this.x + this.width/4, y:this.y + this.height/4 - this.height};
+		if(!blockCollision(this.getReducedRect(up))) // up
+			drawRect({x:0, y:0, width:this.width, height:this.height/3}, this.canvasCtx);
+		if(!flag)
+			return;
+
+		let down = {x: this.x + this.width/4, y:this.y + this.height/4 + this.height};
+		if(!blockCollision(this.getReducedRect(down))) // down
+			drawRect({x:0, y:this.height/4*3, width:this.width, height:this.height/4}, this.canvasCtx);
+		let left = {x: this.x + this.width/4 - this.width, y:this.y + this.height/4};
+		if(!blockCollision(this.getReducedRect(left))) // left
+			drawRect({x:0, y:0, width:this.width/4, height:this.height}, this.canvasCtx);
+		let right = {x: this.x + this.width/4 + this.width, y:this.y + this.height/4};
+		if(!blockCollision(this.getReducedRect(right))) // right
+			drawRect({x:this.width/4*3, y:0, width:this.width/4, height:this.height}, this.canvasCtx);
+		
+		if(blockCollision(this.getReducedRect(up))) {
+			if(blockCollision(this.getReducedRect(left))
+			&& !blockCollision(this.getReducedRect({x: left.x, y: up.y}))) // up left
+				drawRect({x:0, y:0, width:this.width/4, height:this.height/3}, this.canvasCtx);
+			if(blockCollision(this.getReducedRect(right))
+			&& !blockCollision(this.getReducedRect({x: right.x, y: up.y}))) // up right
+				drawRect({x:this.width/4*3, y:0, width:this.width/4, height:this.height/3}, this.canvasCtx);
+		}
+		if(blockCollision(this.getReducedRect(down))) {
+			if(blockCollision(this.getReducedRect(left))
+			&& !blockCollision(this.getReducedRect({x: left.x, y: down.y}))) // down left
+				drawRect({x:0, y:this.height/4*3, width:this.width/4, height:this.height/4}, this.canvasCtx);
+			if(blockCollision(this.getReducedRect(right))
+			&& !blockCollision(this.getReducedRect({x: right.x, y: down.y}))) // down right
+				drawRect({x:this.width/4*3, y:this.height/4*3, width:this.width/4, height:this.height/4}, this.canvasCtx);
+		}
 	}
 	
 	draw(ctx) {
 		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
+	}
+	
+	getReducedRect(json) {
+		return {
+			x: json.x,
+			y: json.y,
+			width: this.width/2,
+			height: this.height/2
+		}
 	}
 	
 	getRect() {
@@ -354,7 +395,13 @@ class Player {
 				let modifiedRect = {
 					y: this.y + this.vspeed + 1
 				}
-				if(blockCollision(this)) {
+				let reducedRect = {
+					x: this.x + this.hspeed * this.direction + this.width/5,
+					width: this.width - this.width/5*2,
+					//y: this.y + this.height/4,
+					//height: this.height/4*3 + 1
+				}
+				if(blockCollision(this.getReducedRect())) {
 					blocks.forEach( (b) => {
 						if(collides(b, this)) {
 							if(b.y > this.y + this.height/2) {
@@ -369,12 +416,6 @@ class Player {
 						}
 					});
 				}
-				
-				/*if(blockCollision(this.getRect(modifiedRect))) {
-					this.vspeed = 0;
-					this.hasJump = this.holdJump = true;
-					//this.y = this.y - this.y % gridHeight;
-				}*/
 				else {
 					if(this.vspeed < this.height/3)
 						if(this.holdJump && this.vspeed < 0)
@@ -385,25 +426,57 @@ class Player {
 						this.vspeed = this.maxVspeed;
 				}
 			// jump system
-				if(this.hasJump && upKey && blockCollision(this.getRect(modifiedRect))) {
-					this.vspeed = -this.height/5;
-					this.hasJump = false;
+				let higherRect = {
+					y: this.y - this.height/2,
+					x: reducedRect.x+1,
+					width: reducedRect.width-2
 				}
+				let lowerRect = {
+					y: this.y + 1,
+					x: reducedRect.x+1,
+					width: reducedRect.width-2
+				}
+				if(!blockCollision(this.getRect(higherRect))) // if there's not a block above the player
+					if(this.hasJump && upKey && blockCollision(this.getRect(lowerRect))) {
+						this.vspeed = -this.height/5;
+						this.hasJump = false;
+					}
 			
 			this.y += this.vspeed;
+			
+			/**/
+			// this is a mañosada that makes you not stop when hitting a top
+			if(this.vspeed <= 0) {
+//				if(!blockCollision(this.getRect({y: this.y-this.height/3*2, height: this.height/3})))
+				if(blockCollision(this.getRect({y: this.y-this.height/3, height: this.height/3}))) {
+					this.y = this.y - this.y % this.height// + this.height;
+					this.vspeed = 0;
+					console.log("XD")
+				}
+			}
+			/**/
 			
 			// sideways movement
 			if(rightKey)
 				this.direction = 1;
 			else if(leftKey)
 				this.direction = -1;
+			let wallBlock = {
+				x: reducedRect.x, //this.x + this.hspeed * this.direction,
+				y: this.y + 1, //this.y + 1, // + this.height/2,
+				width: reducedRect.width,
+				height: - 2 + this.height//3*2//2 - 1
+			}
 			if(rightKey || leftKey) {
-				let modifiedRect = {
-					x: this.x + this.hspeed * this.direction
+				//let modifiedRect = {x: reducedRect.x, y: this.y, width: reducedRect.width, height: this.height}
+				if(!blockCollision(wallBlock)) {// if there's no wall
+					if(wallBlock.x > 0 && wallBlock.x < width - wallBlock.width) {// if player is inside the screen
+						this.x += this.hspeed * this.direction;
+						//console.log("si");
+					}
 				}
-				if(!blockCollision(this.getRect(modifiedRect)) // if there's no wall
-					&& modifiedRect.x > 0 && modifiedRect.x < width - this.width) // if player is inside the screen
-					this.x += this.hspeed * this.direction;
+				else
+					;//console.log("sisisi")
 			}
 			
 			// enemy's interaction
@@ -468,8 +541,8 @@ class Player {
 	}
 	
 	getReducedRect() {
-		let redX = this.width / 6;
-		let redY = this.height / 6;
+		let redX = this.width / 5;
+		let redY = this.height / 5;
 		return {
 			x: this.x + redX,
 			y: this.y + redY,
@@ -1173,6 +1246,9 @@ canvas.addEventListener("mousedown", md => {
 });
 
 canvas.addEventListener("mouseup", mu => {
+	blocks.forEach( (b, i) => {
+		b.updateCanvas(true);
+	})
 	click = rightClick = false;
 	deletedObjectPoint.x = deletedObjectPoint.y = - width;
 })
@@ -1184,29 +1260,37 @@ canvas.addEventListener("mousemove", mm => {
 
 // key events
 window.addEventListener("keydown", key => {
-	//console.log(key.keyCode);
+	console.log(key.keyCode);
 	if(key.keyCode == 27) { // Escape
 		if(!playing)
 			board.displayed = !board.displayed;
 		return;
 	}
-	if(key.keyCode == 37) { // Left arrow
+	if(key.keyCode == 37 || key.keyCode == 65) { // Left arrow or A key
 		leftKey = true;
 		rightKey = false;
 		leftArrowFunction();
 		return;
 	}
-	if(key.keyCode == 38) { // Up arrow
+	if(key.keyCode == 38 || key.keyCode == 87) { // Up arrow or W key
 		upKey = true;
 		player.forEach( p => {
 			p.holdJump = true;
 		})
 		return;
 	}
-	if(key.keyCode == 39) { // Right arrow
+	if(key.keyCode == 39 || key.keyCode == 68) { // Right arrow or D key
 		leftKey = false;
 		rightKey = true;
 		rightArrowFunction();
+		return;
+	}
+	if(key.keyCode >= 49 && key.keyCode <= 52) { // 1 2 3 4
+		selectedObject = key.keyCode - 49;
+		return;
+	}
+	if(key.keyCode == 67) { // C key
+		deleteEverything(true);
 		return;
 	}
 	if(key.keyCode == 71) { // G key
@@ -1229,18 +1313,18 @@ window.addEventListener("keydown", key => {
 
 window.addEventListener("keyup", key => {
 	//console.log(key)
-	if(key.keyCode == 37) { // Left arrow
+	if(key.keyCode == 37 || key.keyCode == 65) { // Left arrow or A key
 		leftKey = false;
 		return;
 	}
-	if(key.keyCode == 38) { // Up arrow
+	if(key.keyCode == 38 || key.keyCode == 87) { // Up arrow or W key
 		upKey = false;
 		player.forEach( p => {
 			p.holdJump = false;
 		})
 		return;
 	}
-	if(key.keyCode == 39) { // Right arrow
+	if(key.keyCode == 39 || key.keyCode == 68) { // Right arrow or D key
 		rightKey = false;
 		return;
 	}
@@ -1270,6 +1354,8 @@ function anyCollision(object, array) {
 
 
 function deleteEverything(flag) {
+	if(player.length + blocks.length + enemys.length == 0)
+		return;
 	if(typeof flag != 'undefined')
 		if(flag == true)
 			if(!confirm("Are you sure you want to clean the screan? You'll lose all your progress"))
@@ -1322,10 +1408,12 @@ function singleClick(clickX, clickY) {
 	let x = clickX || mouseX,
 		y = clickY || mouseY;
 	let thereIsADeletedObject = false;
+	/*
 	let objects = []
 	objects.push(blocks);
 	objects.push(enemys);
 	objects.push(player);
+	*/
 	if(!playing) {
 		blocks.forEach( (block, i) => {
 			if(pointCollision(x, y, block) && selectedObject === constBlock) {
