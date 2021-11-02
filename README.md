@@ -27,8 +27,8 @@
 	
 ## TODO list
 	
-	[ ] Reparar colisión lateral del jugador. No quiere colaborar con los saltos.
-	[ ] Reparar colisión vertical del jugador. Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
+	[x] Reparar colisión lateral del jugador. No quiere colaborar con los saltos.
+	[x] Reparar colisión vertical del jugador. Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
 	[ ] Reparar choque vertical del jugador, pierde velocidad horizontal el chocar la cabeza del personaje
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
 	[x] Seleccionar un objeto específico con los números

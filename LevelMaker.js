@@ -176,7 +176,7 @@ class Block {
 			drawRect({x:0, y:0, width:this.width, height:this.height/3}, this.canvasCtx);
 		if(!flag)
 			return;
-
+		
 		let down = {x: this.x + this.width/4, y:this.y + this.height/4 + this.height};
 		if(!blockCollision(this.getReducedRect(down))) // down
 			drawRect({x:0, y:this.height/4*3, width:this.width, height:this.height/4}, this.canvasCtx);
@@ -187,6 +187,7 @@ class Block {
 		if(!blockCollision(this.getReducedRect(right))) // right
 			drawRect({x:this.width/4*3, y:0, width:this.width/4, height:this.height}, this.canvasCtx);
 		
+		// corners
 		if(blockCollision(this.getReducedRect(up))) {
 			if(blockCollision(this.getReducedRect(left))
 			&& !blockCollision(this.getReducedRect({x: left.x, y: up.y}))) // up left
@@ -398,8 +399,8 @@ class Player {
 				let reducedRect = {
 					x: this.x + this.hspeed * this.direction + this.width/5,
 					width: this.width - this.width/5*2,
-					//y: this.y + this.height/4,
-					//height: this.height/4*3 + 1
+					y: this.y + 1 + this.height/3, //y: this.y + this.height/4,
+					height: - 2 + this.height3*2 //height: this.height/4*3 + 1
 				}
 				if(blockCollision(this.getReducedRect())) {
 					blocks.forEach( (b) => {
@@ -433,8 +434,8 @@ class Player {
 				}
 				let lowerRect = {
 					y: this.y + 1,
-					x: reducedRect.x+1,
-					width: reducedRect.width-2
+					x: this.x+1,
+					width: this.width-2
 				}
 				if(!blockCollision(this.getRect(higherRect))) // if there's not a block above the player
 					if(this.hasJump && upKey && blockCollision(this.getRect(lowerRect))) {
@@ -444,14 +445,15 @@ class Player {
 			
 			this.y += this.vspeed;
 			
-			/**/
+			/*
 			// this is a mañosada that makes you not stop when hitting a top
 			if(this.vspeed <= 0) {
+				let side = (this.width - reducedRect.width) / 2;
 //				if(!blockCollision(this.getRect({y: this.y-this.height/3*2, height: this.height/3})))
-				if(blockCollision(this.getRect({y: this.y-this.height/3, height: this.height/3}))) {
-					this.y = this.y - this.y % this.height// + this.height;
+				if(blockCollision(this.getRect({x:this.x+side,width:this.width-side*2, y: this.y-this.height/3, height: this.height/3}))) {
+					//this.y = this.y - this.y % this.height// + this.height;
 					this.vspeed = 0;
-					console.log("XD")
+					//console.log("XD")
 				}
 			}
 			/**/
@@ -463,9 +465,9 @@ class Player {
 				this.direction = -1;
 			let wallBlock = {
 				x: reducedRect.x, //this.x + this.hspeed * this.direction,
-				y: this.y + 1, //this.y + 1, // + this.height/2,
+				y: this.y + 1 + this.height/3, //this.y + 1, // + this.height/2,
 				width: reducedRect.width,
-				height: - 2 + this.height//3*2//2 - 1
+				height: - 2 + this.height3*2//2 - 1
 			}
 			if(rightKey || leftKey) {
 				//let modifiedRect = {x: reducedRect.x, y: this.y, width: reducedRect.width, height: this.height}
@@ -542,7 +544,7 @@ class Player {
 	
 	getReducedRect() {
 		let redX = this.width / 5;
-		let redY = this.height / 5;
+		let redY = this.height / 3;
 		return {
 			x: this.x + redX,
 			y: this.y + redY,
