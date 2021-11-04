@@ -16,6 +16,8 @@
 	G: grid / ungrid
 	X: Change the horizontal number of cells
 	Y: Change the vertical number of cells
+	alt + O: Open a level
+	alt + S: Save current level
 
 ## Game controls
 
@@ -27,9 +29,15 @@
 	
 ## TODO list
 	
-	[x] Reparar colisión lateral del jugador. No quiere colaborar con los saltos.
-	[x] Reparar colisión vertical del jugador. Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
-	[ ] Reparar choque vertical del jugador, pierde velocidad horizontal el chocar la cabeza del personaje
+	[ ] Reparar
+		[ ] colisión con block del jugador
+			[ ] colisión lateral: No quiere colaborar con los saltos.
+			[x] colisión vertical: Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
+			[ ] choque vertical: pierde velocidad horizontal el chocar la cabeza del personaje
+			[ ] subir lateralmente: se teletransporta a arriba cuando falta poco para llegar, no debería
+		[ ] enemigo
+			[x] colisión con block, traspasa o se traba según cuantos blocks tiene a un lado el enemigo
+		
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
 	[x] Seleccionar un objeto específico con los números
 	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
@@ -48,10 +56,11 @@
 			[x] laterales
 			[x] esquinas
 	
-	[ ] Agregar bloque de daño (pinchos quizá)
-		[ ] Crear objeto agregable
-		[ ] Darle imagen
-		[ ] Darle lógica de daño al jugador
+	[x] Agregar bloque de daño (pinchos)
+		[x] Crear objeto agregable
+		[x] Darle imagen
+		[x] Darle lógica de daño al jugador
+		[ ] Cambiar la imagen como hace el bloque para que no sean solo muchas bolas espinosas
 	
 	[ ] Hacer un IA para el enemigo
 		[x] Hacer una variable de posición inicial para devolver al enemigo cuando el juego tenga playing = false

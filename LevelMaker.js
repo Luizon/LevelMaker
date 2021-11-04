@@ -6,6 +6,7 @@ var canvas = document.getElementById("canvas"),
     sampleObjectCanvas = document.getElementById("sampleObject");
 var canvasCtx, // main canvas context
 	sampleObjetcCtx;
+var fileInput = document.getElementById("file-input");
 
 // constants
 var width,
@@ -16,7 +17,8 @@ var hudFontSize,
 const constEraser = 0,
 	constBlock = 1,
 	constEnemy = 2,
-	constPlayer = 3;
+	constPlayer = 3,
+	constSpikesBlock = 4;
 
 // variables
 var gridX,
@@ -36,14 +38,16 @@ var click,
 	rightKey,
 	upKey,
 	displayedGrid,
-	playing;
+	playing,
+	alt;
 
 // objects
 var clouds = [],
 	blocks = [],
-	enemys = [],
+	enemies = [],
 	sampleObject = [],
 	player = [],
+	spikesBlocks = [],
 	board;
 	
 // counters
@@ -93,7 +97,7 @@ function initializeEverything() {
 		height: sampleObjectCanvas.width/3*2,
 		specialObject: true,
 	};
-	for(let i=0; i <= constPlayer; i++) {
+	for(let i=0; i <= constSpikesBlock; i++) {
 		switch(i) {
 			case constEraser:
 				sampleObject.push(new Eraser(json));
@@ -106,6 +110,9 @@ function initializeEverything() {
 				break;
 			case constPlayer:
 				sampleObject.push(new Player(json));
+				break;
+			case constSpikesBlock:
+				sampleObject.push(new SpikesBlock(json));
 				break;
 		}
 	}
@@ -258,7 +265,7 @@ class Enemy {
 		this.updateCanvas();
 
 		if(!json.specialObject)
-			enemys.push(this);
+			enemies.push(this);
 	}
 	
 	updateCanvas() {
@@ -277,28 +284,42 @@ class Enemy {
 	
 	move() {
 		if(playing && this.living) {
+			let hasTurned = false;
 			// girar si llega a un borde
 				if((this.x + this.width + this.hspeed > width && this.direction > 0)
 					|| (this.x - this.hspeed < 0 && this.direction < 0))
 					this.direction = -this.direction
-			// girar si topa con pared
+
+			// girar si topa con pared o espinas
 				let modifiedRect = {
 					x: this.x + this.hspeed*this.direction
 				}
-				if(blockCollision(this.getRect(modifiedRect)))
+				if(blockCollision(this.getRect(modifiedRect)) || spikesCollision(this.getRect(modifiedRect))) {
 					this.direction = -this.direction
+					hasTurned = true;
+				}
 				
 			// girar si ya no pisa suelo
+				if(!hasTurned)
 				if(blockCollision(this.getRect({y: this.y + this.height})))
-					if(!blockCollision(this.getRect({x: this.x + this.width, y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
-						this.direction = -1;
-					else if(!blockCollision(this.getRect({x: this.x - this.width + Math.ceil(this.hspeed), y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)})))
-						this.direction = 1;
+					if(!blockCollision(this.getRect({x: this.x + this.width, y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)}))) {
+						if(!blockCollision(this.getRect({x: this.x - this.hspeed*this.direction}) || spikesCollision(this.getRect({x: this.x - this.hspeed*this.direction}))))
+						{
+							this.direction = -1;
+							hasTurned = true;
+						}
+					}
+					else
+						if(!blockCollision(this.getRect({x: this.x - this.width + Math.ceil(this.hspeed), y: this.y + this.height, width: this.width - Math.ceil(this.hspeed)}))) {
+							this.direction = 1;
+							hasTurned = true;
+						}
 			// girar al chocar con otro enemigo
-				enemys.forEach( (other, id) => {
+				enemies.forEach( (other, id) => {
 					if(collides(this.getReducedRect(), other.getReducedRect()) && other.id != this.id) {
 						other.direction = -other.direction;
 						this.direction = -this.direction;
+						hasTurned = true;
 					}
 				})
 				
@@ -483,7 +504,7 @@ class Player {
 			
 			// enemy's interaction
 			if(enemyCollision(this)) {
-				enemys.forEach( (e) => {
+				enemies.forEach( (e) => {
 					if(collides(e, this)) {
 						if(e.living) {
 							let wellHeight = this.y + this.height/2 < e.y;
@@ -497,6 +518,12 @@ class Player {
 						}
 					}
 				});
+			}
+
+			// spikes collision
+			let xx = this.x, yy = this.y, hh = this.height, ww = this.width;
+			if(spikesCollision({x: xx + ww/10, y: yy + hh/10, height: hh/10*8, width: ww/10*8})) {
+				this.die();
 			}
 			
 			if(this.y > height) {
@@ -551,6 +578,58 @@ class Player {
 			width: this.width - 2*redX,
 			height: this.height - redY,
 		}
+	}
+}
+
+class SpikesBlock {
+	constructor(json) {
+		this.name = 'spikes';
+		this.width = json.width || gridWidth;
+		this.height = json.width || gridHeight;
+		this.x = json.x || 0;
+		this.y = json.y || 0;
+		this.color = json.color || "#BBB";
+		this.spikesColor = json.spikesColor || "#999";
+				
+		this.canvas = document.createElement('canvas');
+		this.canvas.width = this.width;
+		this.canvas.height = this.height;
+		this.canvasCtx = this.canvas.getContext('2d');
+		this.updateCanvas();
+		
+		if(!json.specialObject)
+			spikesBlocks.push(this);
+	}
+	updateCanvas() {
+		this.canvasCtx.fillStyle = this.color;
+		drawRect(this.getReducedRect(), this.canvasCtx);
+		var triangle = [];
+		let w = this.width, h = this.height;
+		triangle[0] = {x1: w/10,   y1: h/10, x2: w/4,   y2: h/5*2, x3: w/5*2, y3: h/4};
+		triangle[1] = {x1: w/2,    y1: 0,    x2: w/5*3, y2: h/4,   x3: w/5*2, y3: h/4};
+		triangle[2] = {x1: w-w/10, y1: h/10, x2: w/4*3, y2: h/5*2, x3: w/5*3, y3: h/4};
+		triangle[3] = {x1: 0, y1: h/2, x2: w/4,   y2: h/5*2, x3: w/4,   y3: h/5*3};
+		triangle[4] = {x1: w, y1: h/2, x2: w/4*3, y2: h/5*2, x3: w/4*3, y3: h/5*3};
+		triangle[5] = {x1: w/10,   y1: h-h/10, x2: w/4,   y2: h/5*3, x3: w/5*2, y3: h/4*3};
+		triangle[6] = {x1: w/2,    y1: h,      x2: w/5*3, y2: h/4*3, x3: w/5*2, y3: h/4*3};
+		triangle[7] = {x1: w-w/10, y1: h-h/10, x2: w/4*3, y2: h/5*3, x3: w/5*3, y3: h/4*3};
+		this.canvasCtx.fillStyle = this.spikesColor;
+		for(let i = 0 ; i < triangle.length ; i++)
+			drawTriangle(triangle[i], this.canvasCtx);
+		//console.log(triangle[0]);
+	}
+	draw(ctx) {
+		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
+	}
+	getReducedRect() {
+		let redX = this.width/2;
+		let redY = this.height/2;
+		return {
+			x: redX/2,
+			y: redY/2,
+			width: this.width - redX,
+			height: this.height - redY,
+		};
 	}
 }
 
@@ -708,7 +787,7 @@ class Board {
 				specialObject: true
 			};
 			this.displayedBoardSampleObject = [];
-			for(let i=0; i <= constPlayer; i++) {
+			for(let i=0; i <= constSpikesBlock; i++) {
 				switch(i) {
 						case constEraser:
 							this.displayedBoardSampleObject.push(new Eraser(image));
@@ -721,6 +800,9 @@ class Board {
 							break;
 						case constPlayer:
 							this.displayedBoardSampleObject.push(new Player(image));
+							break;
+						case constSpikesBlock:
+							this.displayedBoardSampleObject.push(new SpikesBlock(image));
 							break;
 					}
 				}
@@ -965,13 +1047,17 @@ function destroyObject(x, y) {
 		if(block.x === x && block.y === y)
 			blocks.splice(i, 1);
 	});
-	enemys.forEach( (enemy, i) => {
+	enemies.forEach( (enemy, i) => {
 		if(enemy.x === x && enemy.y === y)
-			enemys.splice(i, 1);
+			enemies.splice(i, 1);
 	});
 	player.forEach( (p, i) => {
 		if(p.x === x && p.y === y)
 			player.splice(i, 1);
+	});
+	spikesBlocks.forEach( (spike, i) => {
+		if(spike.x === x && spike.y === y)
+			spikesBlocks.splice(i, 1);
 	});
 }
 
@@ -1108,10 +1194,28 @@ function drawTriangle(obj, ctx) {
 			drawTriangle({x: 0, y: 200, width: 100, height, 100}, canvasCtx) // it will draw a triangle in the (x, y) coordinates with the given width and height
 			drawTriangle({x1: 60, y1: 20, x2: 40, y2: 80, x3: 50, y3: 50}, canvasCtx) // it will draw a triangle with the exact given points
 	*/
+	let x1, x2, x3, y1, y2, y3;
+	if(typeof obj.x == 'undefined') {
+		x1 = obj.x1;
+		x2 = obj.x2;
+		x3 = obj.x3;
+		y1 = obj.y1;
+		y2 = obj.y2;
+		y3 = obj.y3;
+	}
+	else {
+		x1 = obj.x;
+		x2 = obj.x + obj.width;
+		x3 = obj.x;
+		y1 = obj.y;
+		y2 = obj.y + obj.height/2;
+		y3 = obj.y + obj.height;
+	}
+	
     ctx.beginPath();
-    ctx.moveTo(obj.x1 || obj.x, 			obj.y1 || obj.y);
-    ctx.lineTo(obj.x2 || obj.x + obj.width,	obj.y2 || obj.y + obj.height/2);
-    ctx.lineTo(obj.x3 || obj.x, 			obj.y3 || obj.y + obj.height);
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.lineTo(x3, y3);
     ctx.closePath();
     ctx.fill();
 }
@@ -1141,8 +1245,11 @@ function render() {
 	blocks.forEach( (block, i) => {
 		block.draw(canvasCtx);
 	});
-	enemys.forEach( enemy => {
+	enemies.forEach( enemy => {
 		enemy.draw(canvasCtx);
+	});
+	spikesBlocks.forEach( spike => {
+		spike.draw(canvasCtx);
 	});
 	player.forEach( p => {
 		p.draw(canvasCtx);
@@ -1150,6 +1257,9 @@ function render() {
 	
 	if(displayedGrid)
 		drawGrid(canvasCtx);
+	
+	//let t = {x1: 0, x2: 50, x3: 0, y1: 0, y2: 100, y3: 200};
+	
 	
 	board.draw(canvasCtx);
 }
@@ -1260,12 +1370,80 @@ canvas.addEventListener("mousemove", mm => {
 	mouseY = mm.y;
 })
 
+fileInput.addEventListener('change', e => {
+  var archivo = e.target.files[0];
+  if (!archivo) {
+    return;
+  }
+  var lector = new FileReader();
+  lector.onload = function(e) {
+    contenido = e.target.result;
+    console.log(contenido);
+	  let json = JSON.parse(contenido);
+	  enemyCounter = 0;
+	  json.forEach( (obj, i) => {
+		  if(i == 0) {
+			  setGridX(obj.x, true);
+			  setGridY(obj.y, true);
+		  }
+		  else {
+			  switch(obj.type) {
+				  case constBlock:
+					new Block({
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+				case constEnemy:
+					new Enemy({
+						id: ++enemyCounter,
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+				case constPlayer:
+					new Player({
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+				case constSpikesBlock:
+					new SpikesBlock({
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+			  }
+		  }
+	  });
+  };
+  blocks.forEach( (b) => {
+	  b.updateCanvas();
+  })
+  lector.readAsText(archivo);
+});
+
 // key events
 window.addEventListener("keydown", key => {
 	console.log(key.keyCode);
+	if(key.keyCode == 18) { // alt
+		alt = true;
+		return;
+	}
 	if(key.keyCode == 27) { // Escape
 		if(!playing)
 			board.displayed = !board.displayed;
+		return;
+	}
+	if(key.keyCode == 83 && alt) { // alt + Q
+		alt = false;
+		downloadLevel();
+		//download("HOLA MANOLA", 'json.txt');
+		return;
+	}
+	if(key.keyCode == 79 && alt) { // alt + O
+		alt = false;
+		fileInput.click();
 		return;
 	}
 	if(key.keyCode == 37 || key.keyCode == 65) { // Left arrow or A key
@@ -1287,7 +1465,7 @@ window.addEventListener("keydown", key => {
 		rightArrowFunction();
 		return;
 	}
-	if(key.keyCode >= 49 && key.keyCode <= 52) { // 1 2 3 4
+	if(key.keyCode >= 49 && key.keyCode <= 53) { // 1 2 3 4 5
 		selectedObject = key.keyCode - 49;
 		return;
 	}
@@ -1313,8 +1491,51 @@ window.addEventListener("keydown", key => {
 	}
 });
 
+function downloadLevel(fileName = "level.txt") {
+	var output = [];
+	output.push({x: gridX, y: gridY});
+	blocks.forEach( (b) => {
+		output.push({
+			x: Math.floor(b.x/gridWidth),
+			y: Math.floor(b.y/gridHeight),
+			type: constBlock
+		});
+	});
+	enemies.forEach( (e) => {
+		output.push({
+			x: Math.floor(e.x/gridWidth),
+			y: Math.floor(e.y/gridHeight),
+			type: constEnemy
+		});
+	});
+	player.forEach( (p) => {
+		output.push({
+			x: Math.floor(p.x/gridWidth),
+			y: Math.floor(p.y/gridHeight),
+			type: constPlayer
+		});
+	});
+	spikesBlocks.forEach( (s) => {
+		output.push({
+			x: Math.floor(s.x/gridWidth),
+			y: Math.floor(s.y/gridHeight),
+			type: constSpikesBlock
+		});
+	});
+	
+    var a = document.createElement("a");
+    var file = new Blob([JSON.stringify(output)], {type: 'text/plain'});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
 window.addEventListener("keyup", key => {
 	//console.log(key)
+	if(key.keyCode == 18) { // alt
+		alt = false;
+		return;
+	}
 	if(key.keyCode == 37 || key.keyCode == 65) { // Left arrow or A key
 		leftKey = false;
 		return;
@@ -1340,7 +1561,11 @@ function blockCollision(object) {
 }
 
 function enemyCollision(object) {
-    return anyCollision(object, enemys);
+    return anyCollision(object, enemies);
+}
+
+function spikesCollision(object) {
+    return anyCollision(object, spikesBlocks);
 }
 
 function anyCollision(object, array) {
@@ -1356,7 +1581,7 @@ function anyCollision(object, array) {
 
 
 function deleteEverything(flag) {
-	if(player.length + blocks.length + enemys.length == 0)
+	if(player.length + blocks.length + enemies.length + spikesBlocks.length == 0)
 		return;
 	if(typeof flag != 'undefined')
 		if(flag == true)
@@ -1364,7 +1589,8 @@ function deleteEverything(flag) {
 				return;
 	player.splice(0, player.length);
 	blocks.splice(0, blocks.length);
-	enemys.splice(0, enemys.length);
+	enemies.splice(0, enemies.length);
+	spikesBlocks.splice(0, spikesBlocks.length);
 	playing = false;
 }
 
@@ -1373,7 +1599,7 @@ function playFunction() {
 	if(playing) {
 		board.displayed = false;
 	}
-	enemys.forEach( (enemy) => {
+	enemies.forEach( (enemy) => {
 		enemy.x = enemy.xInit;
 		enemy.direction = 1;
 		enemy.moveEyes();
@@ -1410,12 +1636,7 @@ function singleClick(clickX, clickY) {
 	let x = clickX || mouseX,
 		y = clickY || mouseY;
 	let thereIsADeletedObject = false;
-	/*
-	let objects = []
-	objects.push(blocks);
-	objects.push(enemys);
-	objects.push(player);
-	*/
+
 	if(!playing) {
 		blocks.forEach( (block, i) => {
 			if(pointCollision(x, y, block) && selectedObject === constBlock) {
@@ -1423,14 +1644,20 @@ function singleClick(clickX, clickY) {
 				thereIsADeletedObject = true;
 			}
 		});
-		enemys.forEach( (enemy, i) => {
+		enemies.forEach( (enemy, i) => {
 			if(pointCollision(x, y, enemy) && selectedObject === constEnemy) {
-				enemys.splice(i, 1);
+				enemies.splice(i, 1);
 				thereIsADeletedObject = true;
 			}
 		});
 		player.forEach( (p, i) => {
 			if(pointCollision(x, y, p) && selectedObject === constPlayer) {
+				player.splice(i, 1);
+				thereIsADeletedObject = true;
+			}
+		});
+		spikesBlocks.forEach( (s, i) => {
+			if(pointCollision(x, y, s) && selectedObject === constPlayer) {
 				player.splice(i, 1);
 				thereIsADeletedObject = true;
 			}
@@ -1474,6 +1701,13 @@ function clicking() {
 						case constPlayer:
 							if(!playing)
 							new Player({
+								x: x,
+								y: y
+							});
+							break;
+						case constSpikesBlock:
+							if(!playing)
+							new SpikesBlock({
 								x: x,
 								y: y
 							});
@@ -1537,10 +1771,15 @@ function pointCollision(x, y, rect) {
 			&& y>=rect.y && y<=rect.y+rect.height)
 }
 
-function setGridX(num) {
-	if(!confirm('Are you sure you want to change the grid properties? \nYou\'ll lose your progress.'))
-		return;
-	let n = (typeof num == 'undefined') ? prompt('Type how much horizontal cells you want ') : num;
+function setGridX(num, flaj = false) {
+	if(!flaj)
+		if(!confirm('Are you sure you want to change the grid properties? \nYou\'ll lose your progress.'))
+			return;
+	let n;
+	if(!flaj)
+		 n = (typeof num == 'undefined') ? prompt('Type how much horizontal cells you want ') : num;
+	else
+		n = num;
 	if(typeof n == 'string' || typeof n == 'number') {
 		if(isNaN(n)) {
 			alert('That\'s not a number, it won\'t work');
@@ -1552,10 +1791,15 @@ function setGridX(num) {
 	}
 }
 
-function setGridY(num) {
-	if(!confirm('Are you sure you want to change the grid properties? \nYou\'ll lose your progress.'))
-		return;
-	let n = (typeof num == 'undefined') ? prompt('Type how much vertical cells you want ') : num;
+function setGridY(num, flaj = false) {
+	if(!flaj)
+		if(!confirm('Are you sure you want to change the grid properties? \nYou\'ll lose your progress.'))
+			return;
+	let n;
+	if(!flaj)
+		n = (typeof num == 'undefined') ? prompt('Type how much vertical cells you want ') : num;
+	else
+		n = num;
 	if(typeof n == 'string' || typeof n == 'number') {
 		if(isNaN(n)) {
 			alert('That\'s not a number, it won\'t work');
@@ -1568,7 +1812,7 @@ function setGridY(num) {
 }
 
 function loop() {
-	enemys.forEach( enemy => {
+	enemies.forEach( enemy => {
 		enemy.move();
 	})
 	player.forEach( p => {
