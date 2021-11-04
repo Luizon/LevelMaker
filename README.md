@@ -10,6 +10,7 @@
 	Num 2: Block
 	Num 3: Enemy
 	Num 4: Player
+	Num 5: Spikes block
 	ESC: Open the editor menu
 	Right/Left key: Change the selected object
 	P: play
