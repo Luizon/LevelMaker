@@ -30,9 +30,13 @@
 	
 ## TODO list
 	
+	[x] Agregar
+		[x] botón de guardar nivel
+		[x] botón de cargar nivel
+	
 	[ ] Reparar
 		[ ] colisión con block del jugador
-			[ ] colisión lateral: No quiere colaborar con los saltos.
+			[ ] colisión lateral: No quiere colaborar con los saltos cuando la resolución es grande.
 			[x] colisión vertical: Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
 			[ ] choque vertical: pierde velocidad horizontal el chocar la cabeza del personaje
 			[ ] subir lateralmente: se teletransporta a arriba cuando falta poco para llegar, no debería

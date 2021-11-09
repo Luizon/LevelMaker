@@ -857,17 +857,14 @@ class Board {
 			
 			// a canvas for the button
 				// start the canvas
-				let playCanvas = document.createElement('canvas')
-				let stopCanvas = document.createElement('canvas')
-				playCanvas.width = sampleObjectCanvas.width;
-				stopCanvas.width = sampleObjectCanvas.width;
-				playCanvas.height = sampleObjectCanvas.height;
-				stopCanvas.height = sampleObjectCanvas.height;
+				let playCanvas = document.createElement('canvas');
+				let stopCanvas = document.createElement('canvas');
+				playCanvas.width = stopCanvas.width = sampleObjectCanvas.width;
+				playCanvas.height = stopCanvas.height = sampleObjectCanvas.height;
 				let playCtx = playCanvas.getContext('2d');
 				let stopCtx = stopCanvas.getContext('2d');
 				// paint on the canvas
-				playCtx.fillStyle = "#FFF";
-				stopCtx.fillStyle = "#FFF";
+				playCtx.fillStyle = stopCtx.fillStyle = "#FFF";
 				drawRoundedRect(this.undisplayedBoardSampleObjectBox, playCtx);
 				drawRoundedRect(this.undisplayedBoardSampleObjectBox, stopCtx);
 				playCtx.fillStyle = "#0A0";
@@ -889,7 +886,85 @@ class Board {
 				height: playCanvas.height,
 				playCanvas: playCanvas, //"#0A0",
 				stopCanvas: stopCanvas //"#A00"
-			};			
+			};
+			
+			// a canvas for the save button
+				let saveCanvas = document.createElement('canvas');
+				saveCanvas.height = this.eraseAll.height;
+				saveCanvas.width = this.eraseAll.width;
+				let ww = saveCanvas.width, hh = saveCanvas.height,
+					xx = ww/6, yy = hh/6;
+				
+				let black = {
+					x1: xx,
+					y1: yy,
+					x2: ww - ww/6 - xx,
+					y2: yy,
+					x3: ww - xx,
+					y3: hh/6 + yy,
+					x4: ww - xx,
+					y4: hh - yy,
+					x5: xx,
+					y5: hh - yy,
+					borderRadius: ww/8
+				};
+				let whiteRect = {
+					x: xx + xx/2,
+					y: yy + yy/2,
+					width: ww/3,
+					height: hh/7,
+					borderRadius: ww/16
+				};
+				let whiteCircle = {
+					x: ww/10*4,
+					y: hh/10*6 - yy/4,
+					width: ww/5,
+					height: hh/5
+				};
+				let saveCtx = saveCanvas.getContext('2d');
+				let saveBackground = {
+					x: 0, y: 0,
+					width: this.eraseAll.width,
+					height: this.eraseAll.height
+				};
+				drawSaveButton(saveBackground, black, whiteRect, whiteCircle, saveCtx);/**/
+				
+			this.buttonSave = {
+				x: this.eraseAll.x,
+				y: this.eraseAll.y + saveCanvas.height/5 * 6,
+				width: saveCanvas.width,
+				height: saveCanvas.height,
+				canvas: saveCanvas
+			};
+			
+				let loadCanvas = document.createElement('canvas');
+				loadCanvas.height = this.eraseAll.height;
+				loadCanvas.width = this.eraseAll.width;
+				let folder = {
+					x1: xx,
+					x2: xx/3*4,
+					x3: ww/2 - xx/2,
+					x4: ww/2,
+					x5: ww - xx/3*4,
+					x6: ww - xx,
+					y1: yy,
+					y2: yy/3*4,
+					y3: yy*2,
+					y4: yy/2*5,
+					y5: hh - yy
+				};
+			let loadCtx = loadCanvas.getContext('2d');
+			drawLoadButton(saveBackground, folder, loadCtx);
+			
+			this.buttonLoad = {
+				x: this.eraseAll.x,
+				y: this.eraseAll.y + loadCanvas.height/5 * 12,
+				width: loadCanvas.width,
+				height: loadCanvas.height,
+				canvas: loadCanvas
+			};
+			
+			console.log()
 	}
 	
 	draw(ctx) {
@@ -936,7 +1011,7 @@ class Board {
 		drawRect(bottomRect, ctx);
 		
 		// top things
-			// close buttom
+			// close button
 			ctx.fillStyle = this.closeBoard.color;
 			drawCircle(this.closeBoard, ctx);
 			ctx.lineWidth = Math.max(1, width/180);
@@ -958,7 +1033,7 @@ class Board {
 				this.displayedBoardSampleObject[selectedObject].x,
 				this.displayedBoardSampleObject[selectedObject].y
 			);
-			// sample object name
+			// sample object and sample object name
 			ctx.fillStyle = "#FFF";
 			drawRoundedRect({
 				x: this.displayedBoardSampleObjectBox.x,
@@ -1006,9 +1081,13 @@ class Board {
 			drawRect(trash1, ctx);
 			drawRect(trash2, ctx);
 			drawTrapeze(trashTrapeze, ctx);
+			
+			// save and load button
+			ctx.drawImage(this.buttonSave.canvas, this.buttonSave.x, this.buttonSave.y);
+			ctx.drawImage(this.buttonLoad.canvas, this.buttonLoad.x, this.buttonLoad.y);
 		
 		// bottom things
-			// grid buttom
+			// grid button
 			ctx.fillStyle = displayedGrid ? this.gridButton.turnedOnColor : this.gridButton.turnedOffColor;
 			drawCircle(this.gridButton, ctx);
 			//drawRoundedRect(this.gridButton, ctx);
@@ -1031,7 +1110,7 @@ class Board {
 			drawLine(verticalLine, ctx);
 			drawLine(verticalLine.x1, verticalLine.y1 + this.gridButton.height/3, verticalLine.x2 , verticalLine.y2 + this.gridButton.height/3, ctx);
 			
-			// grid buttoms
+			// grid buttons
 			ctx.fillStyle = this.gridYButtom.color;
 			drawRoundedRect(this.gridYButtom, ctx);
 			drawRoundedRect(this.gridXButtom, ctx);
@@ -1235,6 +1314,60 @@ function drawRoundedRect(obj, ctx) {
 	ctx.fill();
 }
 
+function drawSaveButton(background, black, rect, circle, ctx) {
+	// background
+		ctx.fillStyle = "#FFF"
+		drawRoundedRect(background, ctx);
+	
+	// black thing
+		ctx.fillStyle = "#000";
+		let borderRadius = black.borderRadius || width/gridX/8;
+		ctx.beginPath();
+		ctx.moveTo(black.x1 + borderRadius, black.y1);
+		ctx.lineTo(black.x2 - borderRadius/4, black.y2);
+		ctx.quadraticCurveTo(black.x2, black.y2, black.x2 + borderRadius/4, black.y2 + borderRadius/4);
+		ctx.lineTo(black.x3 - borderRadius/4, black.y3 - borderRadius/4);
+		ctx.quadraticCurveTo(black.x3, black.y3, black.x3, black.y3 + borderRadius/3);
+		ctx.lineTo(black.x4, black.y4 - borderRadius);
+		ctx.quadraticCurveTo(black.x4, black.y4, black.x4 - borderRadius, black.y4);
+		ctx.lineTo(black.x5 + borderRadius, black.y5);
+		ctx.quadraticCurveTo(black.x5, black.y5, black.x5, black.y5 - borderRadius);
+		ctx.lineTo(black.x1, black.y1 + borderRadius);
+		ctx.quadraticCurveTo(black.x1, black.y1, black.x1 + borderRadius, black.y1);
+		ctx.fill();
+	
+	// white things
+		ctx.fillStyle = "#FFF";
+		borderRadius = black.borderRadius/2 || width/gridX/16;
+		drawRoundedRect(rect, ctx);
+		drawCircle(circle, ctx);
+}
+
+function drawLoadButton(background, folder, ctx) {
+	// background
+		ctx.fillStyle = "#FFF";
+		drawRoundedRect(background, ctx);
+		
+	// top black thing
+		ctx.fillStyle = "#000";
+		ctx.beginPath();
+		ctx.moveTo(folder.x2, folder.y1);
+		ctx.lineTo(folder.x3, folder.y1);
+		ctx.lineTo(folder.x4, folder.y2);
+		ctx.lineTo(folder.x5, folder.y2);
+		ctx.lineTo(folder.x5, folder.y3);
+		ctx.lineTo(folder.x2, folder.y3);
+		ctx.fill();
+		
+	// bottom black thing
+		ctx.beginPath();
+		ctx.moveTo(folder.x1, folder.y4);
+		ctx.lineTo(folder.x6, folder.y4);
+		ctx.lineTo(folder.x5, folder.y5);
+		ctx.lineTo(folder.x2, folder.y5);
+		ctx.fill();
+		
+}
 function render() {
 	drawBackground(canvasCtx);
 	clouds.forEach( cloud => {
@@ -1257,8 +1390,6 @@ function render() {
 	
 	if(displayedGrid)
 		drawGrid(canvasCtx);
-	
-	//let t = {x1: 0, x2: 50, x3: 0, y1: 0, y2: 100, y3: 200};
 	
 	
 	board.draw(canvasCtx);
@@ -1323,29 +1454,36 @@ canvas.addEventListener("mousedown", md => {
 			leftArrowFunction();
 			return;
 		}
+		if(pointCollision(md.x, md.y, board.displayedBoardSampleObjectBox)) {
+			board.displayed = !board.displayed;
+			return;
+		}
 		if(pointCollision(md.x, md.y, board.rightArrow)) {
 			rightArrowFunction();
 			return;
 		}
-		if(pointCollision(md.x, md.y, board.gridButton)) {
-			displayedGrid = !displayedGrid;
+		if(pointCollision(md.x, md.y, board.buttonSave)) {
+			downloadLevel();
 			return;
 		}
-		if(pointCollision(md.x, md.y, board.displayedBoardSampleObjectBox)) {
-			board.displayed = !board.displayed;
+		if(pointCollision(md.x, md.y, board.buttonLoad)) {
+			fileInput.click();
+			return;
+		}
+		if(pointCollision(md.x, md.y, board.eraseAll)) {
+			deleteEverything(true);
 			return;
 		}
 		if(pointCollision(md.x, md.y, board.gridYButtom)) {
 			setGridY();
 			return;
 		}
-		if(pointCollision(md.x, md.y, board.gridXButtom)) {
-			setGridX();
+		if(pointCollision(md.x, md.y, board.gridButton)) {
+			displayedGrid = !displayedGrid;
 			return;
 		}
-		
-		if(pointCollision(md.x, md.y, board.eraseAll)) {
-			deleteEverything(true);
+		if(pointCollision(md.x, md.y, board.gridXButtom)) {
+			setGridX();
 			return;
 		}
 	}
