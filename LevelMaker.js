@@ -64,7 +64,7 @@ function initializeEverything() {
 	sampleObjectCanvas.width = (width > height? height : width)/7;
 	sampleObjectCanvas.height = sampleObjectCanvas.width;
     fps = 60;
-    hudFontSize = (width<height ? width: height)/10;
+    hudFontSize = (width < height ? width : height)/10;
     hudFont = hudFontSize + "px Arial";
 
 	// variables
@@ -116,6 +116,72 @@ function initializeEverything() {
 				break;
 		}
 	}
+}
+
+function updateEverything() {
+	width = document.documentElement.clientWidth;
+    height = document.documentElement.clientHeight;
+    canvas.width = width;
+    canvas.height = height;
+	sampleObjectCanvas.width = (width > height? height : width)/7;
+	sampleObjectCanvas.height = sampleObjectCanvas.width;
+    hudFontSize = (width < height ? width : height)/10;
+    hudFont = hudFontSize + "px Arial";
+	
+	// save current objects
+	enemies.forEach( e => {
+		e.x = e.xInit;
+	});
+	player.forEach( p => {
+		p.x = p.xInit;
+		p.y = p.yInit;
+	});
+	let objectsState = objectsStateToJSON();
+	blocks.length = 0;
+	enemies.length = 0;
+	player.length = 0;
+	spikesBlocks.length = 0;
+
+	// variables
+	gridWidth = Math.ceil(width / gridX);
+	gridHeight = Math.ceil(height / gridY);
+
+	// objects
+	board = new Board();
+	let cloudsLength = Math.floor(width / height * 10)
+	clouds.length = 0;
+	for(let i=0; i < cloudsLength; i++)
+	    clouds.push(new Cloud({}));
+	let json = {
+		x: sampleObjectCanvas.width/6,
+		y: sampleObjectCanvas.width/6,
+		width: sampleObjectCanvas.width/3*2,
+		height: sampleObjectCanvas.width/3*2,
+		specialObject: true,
+	};
+	sampleObject.length = 0;
+	for(let i=0; i <= constSpikesBlock; i++) {
+		switch(i) {
+			case constEraser:
+				sampleObject.push(new Eraser(json));
+				break;
+			case constBlock:
+				sampleObject.push(new Block(json));
+				break;
+			case constEnemy:
+				sampleObject.push(new Enemy(json));
+				break;
+			case constPlayer:
+				sampleObject.push(new Player(json));
+				break;
+			case constSpikesBlock:
+				sampleObject.push(new SpikesBlock(json));
+				break;
+		}
+	}
+	
+	// here the level objects
+	loadObjects(objectsState);
 }
 
 //==========================================
@@ -764,13 +830,6 @@ class Board {
 				height: this.topHeight/4,
 				color: "#FFF",
 			};
-			this.eraseAll = {
-				x: width - sampleObjectCanvas.width/5 - this.topHeight/4,
-				y: sampleObjectCanvas.width/5,
-				width: this.topHeight/4,
-				height: this.topHeight/4,
-				color: "#FFF",
-			};
 			this.displayedBoardSampleObjectBox = {
 				x: (width - displayedBoardSampleObjectBoxSize) / 2,
 				y: (this.topHeight - displayedBoardSampleObjectBoxSize) / 2,
@@ -855,7 +914,48 @@ class Board {
 				color: "#FFF",
 			};
 			
-			// a canvas for the button
+			this.eraseAll = {
+				x: width - sampleObjectCanvas.width/5 - this.topHeight/4,
+				y: sampleObjectCanvas.width/5,
+				width: this.topHeight/4,
+				height: this.topHeight/4,
+				borderRadius: this.topHeight/16,
+				canvas: 0,
+			};
+				let eraseCanvas = document.createElement('canvas');
+				eraseCanvas.height = this.eraseAll.height;
+				eraseCanvas.width = this.eraseAll.width;
+				let eraseCtx = eraseCanvas.getContext('2d');
+				eraseCtx.fillStyle = '#FFF';
+				drawRoundedRect({x: 0, y: 0, width: this.eraseAll.width, height: this.eraseAll.height}, eraseCtx);
+				eraseCtx.fillStyle = "#000"
+				let trash1 = {
+					x: this.eraseAll.width/8*3,
+					y: this.eraseAll.height/5,
+					width: this.eraseAll.width/4,
+					height: this.eraseAll.height/20
+				}
+				let trash2 = {
+					x: this.eraseAll.width/4,
+					y: this.eraseAll.height/20*5,
+					width: this.eraseAll.width/2,
+					height: this.eraseAll.height/10
+				}
+				let trashTrapeze = {
+					x1: trash2.x,
+					y1: trash2.y + this.eraseAll.height/20*3,
+					x2: trash2.x + trash2.width,
+					y2: trash2.y + this.eraseAll.height/20*3,
+					x3: trash2.x + trash2.width/4*3,
+					y3: trash2.y + this.eraseAll.height/5*3,
+					x4: trash2.x + trash2.width/4,
+					y4: trash2.y + this.eraseAll.height/5*3
+				}
+				drawRect(trash1, eraseCtx);
+				drawRect(trash2, eraseCtx);
+				drawTrapeze(trashTrapeze, eraseCtx);
+			this.eraseAll.canvas = eraseCanvas;
+			
 				// start the canvas
 				let playCanvas = document.createElement('canvas');
 				let stopCanvas = document.createElement('canvas');
@@ -923,6 +1023,7 @@ class Board {
 				};
 				let saveCtx = saveCanvas.getContext('2d');
 				let saveBackground = {
+					borderRadius: this.eraseAll.borderRadius,
 					x: 0, y: 0,
 					width: this.eraseAll.width,
 					height: this.eraseAll.height
@@ -1052,37 +1153,8 @@ class Board {
 			drawTriangle(this.rightArrow, ctx);
 			drawTriangle(this.leftArrow, ctx);
 			
-			// trash can
-			ctx.fillStyle = this.eraseAll.color;
-			drawRoundedRect(this.eraseAll, ctx);
-			ctx.fillStyle = "#000"
-			let trash1 = {
-				x: this.eraseAll.x + this.eraseAll.width/8*3,
-				y: this.eraseAll.y + this.eraseAll.height/5,
-				width: this.eraseAll.width/4,
-				height: this.eraseAll.height/20
-			}
-			let trash2 = {
-				x: this.eraseAll.x + this.eraseAll.width/4,
-				y: this.eraseAll.y + this.eraseAll.height/20*5,
-				width: this.eraseAll.width/2,
-				height: this.eraseAll.height/10
-			}
-			let trashTrapeze = {
-				x1: trash2.x,
-				y1: trash2.y + this.eraseAll.height/20*3,
-				x2: trash2.x + trash2.width,
-				y2: trash2.y + this.eraseAll.height/20*3,
-				x3: trash2.x + trash2.width/4*3,
-				y3: trash2.y + this.eraseAll.height/5*3,
-				x4: trash2.x + trash2.width/4,
-				y4: trash2.y + this.eraseAll.height/5*3
-			}
-			drawRect(trash1, ctx);
-			drawRect(trash2, ctx);
-			drawTrapeze(trashTrapeze, ctx);
-			
-			// save and load button
+			// erase, save and load buttons
+			ctx.drawImage(this.eraseAll.canvas, this.eraseAll.x, this.eraseAll.y);
 			ctx.drawImage(this.buttonSave.canvas, this.buttonSave.x, this.buttonSave.y);
 			ctx.drawImage(this.buttonLoad.canvas, this.buttonLoad.x, this.buttonLoad.y);
 		
@@ -1368,6 +1440,7 @@ function drawLoadButton(background, folder, ctx) {
 		ctx.fill();
 		
 }
+
 function render() {
 	drawBackground(canvasCtx);
 	clouds.forEach( cloud => {
@@ -1398,6 +1471,112 @@ function render() {
 //==========================================
 // GAME EVENTS
 //==========================================
+// resize window
+window.onresize = updateEverything;
+
+// load and save level things
+function downloadLevel(fileName = "level.txt") {
+	var output = objectsStateToJSON();
+	
+    var a = document.createElement("a");
+    var file = new Blob([JSON.stringify(output)], {type: 'text/plain'});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+}
+
+function objectsStateToJSON() {
+	var output = [];
+	output.push({x: gridX, y: gridY});
+	blocks.forEach( (b) => {
+		output.push({
+			x: Math.floor(b.x/gridWidth),
+			y: Math.floor(b.y/gridHeight),
+			type: constBlock
+		});
+	});
+	enemies.forEach( (e) => {
+		output.push({
+			x: Math.floor(e.x/gridWidth),
+			y: Math.floor(e.y/gridHeight),
+			type: constEnemy
+		});
+	});
+	player.forEach( (p) => {
+		output.push({
+			x: Math.floor(p.x/gridWidth),
+			y: Math.floor(p.y/gridHeight),
+			type: constPlayer
+		});
+	});
+	spikesBlocks.forEach( (s) => {
+		output.push({
+			x: Math.floor(s.x/gridWidth),
+			y: Math.floor(s.y/gridHeight),
+			type: constSpikesBlock
+		});
+	});
+	return output;
+}
+
+function loadObjects(json) {
+	enemyCounter = 0;
+	json.forEach( (obj, i) => {
+		if(i == 0) {
+			setGridX(obj.x, true);
+			setGridY(obj.y, true);
+		}
+		else {
+			switch(obj.type) {
+				case constBlock:
+					new Block({
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+				case constEnemy:
+					new Enemy({
+						id: ++enemyCounter,
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+				case constPlayer:
+					new Player({
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+				case constSpikesBlock:
+					new SpikesBlock({
+						x: obj.x*gridWidth,
+						y: obj.y*gridHeight
+					});
+					break;
+			}
+		}
+	});
+	blocks.forEach( b => {
+		console.log(b);
+		b.updateCanvas(true);
+	});
+}
+
+fileInput.addEventListener('change', e => {
+  var archivo = e.target.files[0];
+  if (!archivo) {
+    return;
+  }
+  var lector = new FileReader();
+  lector.onload = function(e) {
+    contenido = e.target.result;
+    console.log(contenido);
+	  let json = JSON.parse(contenido);
+	  loadObjects(json);
+  };
+  lector.readAsText(archivo);
+});
+
 // touch events
 canvas.addEventListener('touchstart', touch => {
 	var x = touch.changedTouches[0].clientX,
@@ -1508,59 +1687,6 @@ canvas.addEventListener("mousemove", mm => {
 	mouseY = mm.y;
 })
 
-fileInput.addEventListener('change', e => {
-  var archivo = e.target.files[0];
-  if (!archivo) {
-    return;
-  }
-  var lector = new FileReader();
-  lector.onload = function(e) {
-    contenido = e.target.result;
-    console.log(contenido);
-	  let json = JSON.parse(contenido);
-	  enemyCounter = 0;
-	  json.forEach( (obj, i) => {
-		  if(i == 0) {
-			  setGridX(obj.x, true);
-			  setGridY(obj.y, true);
-		  }
-		  else {
-			  switch(obj.type) {
-				  case constBlock:
-					new Block({
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-				case constEnemy:
-					new Enemy({
-						id: ++enemyCounter,
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-				case constPlayer:
-					new Player({
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-				case constSpikesBlock:
-					new SpikesBlock({
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-			  }
-		  }
-	  });
-  };
-  blocks.forEach( (b) => {
-	  b.updateCanvas();
-  })
-  lector.readAsText(archivo);
-});
-
 // key events
 window.addEventListener("keydown", key => {
 	console.log(key.keyCode);
@@ -1628,45 +1754,6 @@ window.addEventListener("keydown", key => {
 		return;
 	}
 });
-
-function downloadLevel(fileName = "level.txt") {
-	var output = [];
-	output.push({x: gridX, y: gridY});
-	blocks.forEach( (b) => {
-		output.push({
-			x: Math.floor(b.x/gridWidth),
-			y: Math.floor(b.y/gridHeight),
-			type: constBlock
-		});
-	});
-	enemies.forEach( (e) => {
-		output.push({
-			x: Math.floor(e.x/gridWidth),
-			y: Math.floor(e.y/gridHeight),
-			type: constEnemy
-		});
-	});
-	player.forEach( (p) => {
-		output.push({
-			x: Math.floor(p.x/gridWidth),
-			y: Math.floor(p.y/gridHeight),
-			type: constPlayer
-		});
-	});
-	spikesBlocks.forEach( (s) => {
-		output.push({
-			x: Math.floor(s.x/gridWidth),
-			y: Math.floor(s.y/gridHeight),
-			type: constSpikesBlock
-		});
-	});
-	
-    var a = document.createElement("a");
-    var file = new Blob([JSON.stringify(output)], {type: 'text/plain'});
-    a.href = URL.createObjectURL(file);
-    a.download = fileName;
-    a.click();
-}
 
 window.addEventListener("keyup", key => {
 	//console.log(key)

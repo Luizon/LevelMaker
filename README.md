@@ -30,9 +30,14 @@
 	
 ## TODO list
 	
-	[x] Agregar
-		[x] botón de guardar nivel
-		[x] botón de cargar nivel
+	[x] Agregar botón de guardar nivel
+	[x] Agregar botón de cargar nivel
+	[ ] Agregar gameplay para touch screen
+		[ ] Permitir que se pueda jugar
+		[ ] Dibujar un joystick donde toca para dar a entender como mueves al personaje
+			[ ] Animar el joystick sin suavidad
+			[ ] Animar el joystick con suavidad
+		[ ] Que el joystick se mueva donde el dedo, para facilitar el movimiento en screen
 	
 	[ ] Reparar
 		[ ] colisión con block del jugador
