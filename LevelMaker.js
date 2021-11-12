@@ -55,6 +55,7 @@ var enemyCounter = 0;
 
 function initializeEverything() {
 	// constants
+	fileInput.accept = '.lm';
     canvasCtx = canvas.getContext("2d");
 	sampleObjetcCtx = sampleObjectCanvas.getContext("2d");
 	width = document.documentElement.clientWidth;
@@ -1475,7 +1476,7 @@ function render() {
 window.onresize = updateEverything;
 
 // load and save level things
-function downloadLevel(fileName = "level.txt") {
+function downloadLevel(fileName = "level.lm") { // save file
 	var output = objectsStateToJSON();
 	
     var a = document.createElement("a");
@@ -1557,24 +1558,40 @@ function loadObjects(json) {
 		}
 	});
 	blocks.forEach( b => {
-		console.log(b);
+		//console.log(b);
 		b.updateCanvas(true);
 	});
 }
 
-fileInput.addEventListener('change', e => {
-  var archivo = e.target.files[0];
-  if (!archivo) {
-    return;
-  }
-  var lector = new FileReader();
-  lector.onload = function(e) {
-    contenido = e.target.result;
-    console.log(contenido);
-	  let json = JSON.parse(contenido);
-	  loadObjects(json);
-  };
-  lector.readAsText(archivo);
+fileInput.addEventListener('change', e => { // load file
+	let flag = false;
+	if(player.length + blocks.length + enemies.length + spikesBlocks.length > 0)
+		flag = true;
+	if(flag == true)
+		if(!confirm("Are you sure you want to load a new level?\nYou'll lose all your progress"))
+			return;  var archivo = e.target.files[0];
+
+	if (!archivo) {
+		return;
+	}
+	var lector = new FileReader();
+	lector.onload = function(e) {
+	contenido = e.target.result;
+	//console.log(contenido);
+	let json = 0;
+	try {
+		json = JSON.parse(contenido);
+	} catch(error) {
+		console.error(error);
+		alert("There was an error loading your level."
+		+"\nThe file used is not a Level Maker file or it is corrupted."
+		+"\n\nTry again with another file or make a new level.");
+	}
+	if(json != 0)
+		loadObjects(json);
+	};
+	lector.readAsText(archivo);
+	fileInput.value = "";
 });
 
 // touch events
@@ -1810,7 +1827,7 @@ function deleteEverything(flag) {
 		return;
 	if(typeof flag != 'undefined')
 		if(flag == true)
-			if(!confirm("Are you sure you want to clean the screan? You'll lose all your progress"))
+			if(!confirm("Are you sure you want to clean the screan?\nYou'll lose all your progress"))
 				return;
 	player.splice(0, player.length);
 	blocks.splice(0, blocks.length);
