@@ -836,6 +836,33 @@ class Board {
 				height: this.topHeight/4,
 				color: "#FFF",
 			};
+			
+			let undoCanvas = document.createElement('canvas');
+			let undoCtx = undoCanvas.getContext('2d');
+			
+			this.buttonUndo = {
+				x: sampleObjectCanvas.width/5,
+				y: sampleObjectCanvas.width/5 + this.topHeight/5 * 3,
+				width: this.topHeight/4,
+				height: this.topHeight/4,
+				canvas: 0
+			};
+			
+			undoCanvas.height = undoCanvas.width = this.buttonUndo.width;
+			undoCtx.fillStyle = "#FFF";
+			drawRoundedRect({x: 0, y: 0, height: this.buttonUndo.height, width: this.buttonUndo.width}, undoCtx);
+			undoCtx.fillStyle = "#000";
+			let undoTriangle = {
+				x1: undoCanvas.width - undoCanvas.width/4,
+				y1: undoCanvas.height/4,
+				x2: undoCanvas.width/4,
+				y2: undoCanvas.height/2,
+				x3: undoCanvas.width - undoCanvas.width/4,
+				y3: undoCanvas.height - undoCanvas.height/4
+			}
+			drawTriangle(undoTriangle, undoCtx);
+			this.buttonUndo.canvas = undoCanvas;
+
 			this.displayedBoardSampleObjectBox = {
 				x: (width - displayedBoardSampleObjectBoxSize) / 2,
 				y: (this.topHeight - displayedBoardSampleObjectBoxSize) / 2,
@@ -981,7 +1008,7 @@ class Board {
 					y: valor,
 					width: valor*3,
 					height: valor*3
-				}
+				};
 				drawRect(rect, stopCtx)
 				drawTriangle(rect, playCtx)
 				
@@ -1131,6 +1158,8 @@ class Board {
 			};
 			drawLine(crossedLine, ctx);
 			drawLine(crossedLine.x2, crossedLine.y1, crossedLine.x1, crossedLine.y2, ctx);
+			
+			ctx.drawImage(this.buttonUndo.canvas, this.buttonUndo.x, this.buttonUndo.y);
 			
 			// white sample object box
 			ctx.fillStyle = "#FFF";
@@ -1693,6 +1722,10 @@ canvas.addEventListener("mousedown", md => {
 			board.displayed = !board.displayed;
 			return;
 		}
+		if(pointCollision(md.x, md.y, board.buttonUndo)) {
+			undo();
+			return;
+		}
 		if(pointCollision(md.x, md.y, board.leftArrow)) {
 			leftArrowFunction();
 			return;
@@ -1821,22 +1854,8 @@ window.addEventListener("keydown", key => {
 		setGridY();
 		return;
 	}
-	if(key.keyCode == 90 && (control || alt)) { // Y key
-		if(lastActions.length > 0) {
-			let obj = lastActions[lastActions.length - 1].object;
-			if(lastActions[lastActions.length - 1].action == constDelete) {
-				addObject(obj.x*gridWidth, obj.y*gridHeight, obj.object);
-			}
-			else {
-				destroyObject(obj.x*gridWidth, obj.y*gridHeight);
-			}
-			if(obj.object == constBlock) {
-				blocks.forEach( b => {
-					b.updateCanvas(true);
-				});
-			}
-			lastActions.splice(lastActions.length - 1, lastActions.length); // xddddd
-		}
+	if(key.keyCode == 90 && (control || alt)) { // control Z or alt Z
+		undo();
 		return;
 	}
 });
@@ -2079,6 +2098,24 @@ function addToHistory(x, y, deletedObject = false) {
 	else { // there IS a deleted object
 		let objectDeleted = {x: x, y: y, object: deletedObject};
 		lastActions.push({action: constDelete, object: objectDeleted});
+	}
+}
+
+function undo() {
+	if(lastActions.length > 0) {
+		let obj = lastActions[lastActions.length - 1].object;
+		if(lastActions[lastActions.length - 1].action == constDelete) {
+			addObject(obj.x*gridWidth, obj.y*gridHeight, obj.object);
+		}
+		else {
+			destroyObject(obj.x*gridWidth, obj.y*gridHeight);
+		}
+		if(obj.object == constBlock) {
+			blocks.forEach( b => {
+				b.updateCanvas(true);
+			});
+		}
+		lastActions.splice(lastActions.length - 1, lastActions.length); // xddddd
 	}
 }
 
