@@ -19,6 +19,9 @@ const constEraser = 0,
 	constEnemy = 2,
 	constPlayer = 3,
 	constSpikesBlock = 4;
+const constAdd = 0,
+	constDelete = 1;
+const historyLimit = 300; // amount of objects deleted or added
 
 // variables
 var gridX,
@@ -39,7 +42,8 @@ var click,
 	upKey,
 	displayedGrid,
 	playing,
-	alt;
+	alt,
+	control;
 
 // objects
 var clouds = [],
@@ -49,6 +53,7 @@ var clouds = [],
 	player = [],
 	spikesBlocks = [],
 	board;
+var lastActions = []; // {action, object: {x, y, object}}
 	
 // counters
 var enemyCounter = 0;
@@ -83,7 +88,7 @@ function initializeEverything() {
 	deletedObjectPoint = {x:-width, y:-width}
 
 	// booleans
-    playing = rightClick = click = leftKey = rightKey = upKey = false;
+    playing = rightClick = click = leftKey = rightKey = upKey = alt = control = false;
 	displayedGrid = true;
 	
 	// objects
@@ -1195,22 +1200,57 @@ class Board {
 }
 
 function destroyObject(x, y) {
+	let object = false;
 	blocks.forEach( (block, i) => {
-		if(block.x === x && block.y === y)
+		if(block.x === x && block.y === y) {
 			blocks.splice(i, 1);
+			object = {object: constBlock, x: block.x, y: block.y};
+		}
 	});
 	enemies.forEach( (enemy, i) => {
-		if(enemy.x === x && enemy.y === y)
+		if(enemy.x === x && enemy.y === y) {
 			enemies.splice(i, 1);
+			object = {object: constEnemy, x: enemy.x, y: enemy.y};
+		}
 	});
 	player.forEach( (p, i) => {
-		if(p.x === x && p.y === y)
+		if(p.x === x && p.y === y) {
 			player.splice(i, 1);
+			object = {object: constPlayer, x: p.x, y: p.y};
+		}
 	});
 	spikesBlocks.forEach( (spike, i) => {
-		if(spike.x === x && spike.y === y)
+		if(spike.x === x && spike.y === y) {
 			spikesBlocks.splice(i, 1);
+			object = {object: constSpikesBlock, x: spike.x, y: spike.y};
+		}
 	});
+	return object;
+}
+
+function getObject(x, y) {
+	let object = false;
+	blocks.forEach( (block, i) => {
+		if(block.x === x && block.y === y) {
+			object = {object: constBlock, x: block.x, y: block.y};
+		}
+	});
+	enemies.forEach( (enemy, i) => {
+		if(enemy.x === x && enemy.y === y) {
+			object = {object: constEnemy, x: enemy.x, y: enemy.y};
+		}
+	});
+	player.forEach( (p, i) => {
+		if(p.x === x && p.y === y) {
+			object = {object: constPlayer, x: p.x, y: p.y};
+		}
+	});
+	spikesBlocks.forEach( (spike, i) => {
+		if(spike.x === x && spike.y === y) {
+			object = {object: constSpikesBlock, x: spike.x, y: spike.y};
+		}
+	});
+	return object;
 }
 
 //==========================================
@@ -1528,39 +1568,45 @@ function loadObjects(json) {
 			setGridY(obj.y, true);
 		}
 		else {
-			switch(obj.type) {
-				case constBlock:
-					new Block({
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-				case constEnemy:
-					new Enemy({
-						id: ++enemyCounter,
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-				case constPlayer:
-					new Player({
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-				case constSpikesBlock:
-					new SpikesBlock({
-						x: obj.x*gridWidth,
-						y: obj.y*gridHeight
-					});
-					break;
-			}
+			addObject(obj.x*gridWidth, obj.y*gridHeight, obj.type);
 		}
 	});
 	blocks.forEach( b => {
 		//console.log(b);
 		b.updateCanvas(true);
 	});
+}
+
+function addObject(x, y, object) {
+	let obj = false;
+	switch(object) {
+		case constBlock:
+			obj = new Block({
+				x: x,
+				y: y
+			});
+			break;
+		case constEnemy:
+			obj = new Enemy({
+				id: ++enemyCounter,
+				x: x,
+				y: y
+			});
+			break;
+		case constPlayer:
+			obj = new Player({
+				x: x,
+				y: y
+			});
+			break;
+		case constSpikesBlock:
+			obj = new SpikesBlock({
+				x: x,
+				y: y
+			});
+			break;
+	}
+	return obj;
 }
 
 fileInput.addEventListener('change', e => { // load file
@@ -1592,6 +1638,7 @@ fileInput.addEventListener('change', e => { // load file
 	};
 	lector.readAsText(archivo);
 	fileInput.value = "";
+	lastActions.length = 0;
 });
 
 // touch events
@@ -1706,7 +1753,11 @@ canvas.addEventListener("mousemove", mm => {
 
 // key events
 window.addEventListener("keydown", key => {
-	console.log(key.keyCode);
+	//console.log(key.keyCode);
+	if(key.keyCode == 17) { // control
+		control = true;
+		return;
+	}
 	if(key.keyCode == 18) { // alt
 		alt = true;
 		return;
@@ -1770,10 +1821,32 @@ window.addEventListener("keydown", key => {
 		setGridY();
 		return;
 	}
+	if(key.keyCode == 90 && (control || alt)) { // Y key
+		if(lastActions.length > 0) {
+			let obj = lastActions[lastActions.length - 1].object;
+			if(lastActions[lastActions.length - 1].action == constDelete) {
+				addObject(obj.x*gridWidth, obj.y*gridHeight, obj.object);
+			}
+			else {
+				destroyObject(obj.x*gridWidth, obj.y*gridHeight);
+			}
+			if(obj.object == constBlock) {
+				blocks.forEach( b => {
+					b.updateCanvas(true);
+				});
+			}
+			lastActions.splice(lastActions.length - 1, lastActions.length); // xddddd
+		}
+		return;
+	}
 });
 
 window.addEventListener("keyup", key => {
 	//console.log(key)
+	if(key.keyCode == 17) { // control
+		control = false;
+		return;
+	}
 	if(key.keyCode == 18) { // alt
 		alt = false;
 		return;
@@ -1877,31 +1950,37 @@ function rightArrowFunction() {
 function singleClick(clickX, clickY) {
 	let x = clickX || mouseX,
 		y = clickY || mouseY;
+	let deletedObjectX = (mouseX - mouseX % gridWidth) / gridWidth,
+		deletedObjectY = (mouseY - mouseY % gridHeight) / gridHeight;
 	let thereIsADeletedObject = false;
-
+	
 	if(!playing) {
 		blocks.forEach( (block, i) => {
 			if(pointCollision(x, y, block) && selectedObject === constBlock) {
 				blocks.splice(i, 1);
 				thereIsADeletedObject = true;
+				addToHistory(deletedObjectX, deletedObjectY, constBlock);
 			}
 		});
 		enemies.forEach( (enemy, i) => {
 			if(pointCollision(x, y, enemy) && selectedObject === constEnemy) {
 				enemies.splice(i, 1);
 				thereIsADeletedObject = true;
+				addToHistory(deletedObjectX, deletedObjectY, constEnemy);
 			}
 		});
 		player.forEach( (p, i) => {
 			if(pointCollision(x, y, p) && selectedObject === constPlayer) {
 				player.splice(i, 1);
 				thereIsADeletedObject = true;
+				addToHistory(deletedObjectX, deletedObjectY, constPlayer);
 			}
 		});
 		spikesBlocks.forEach( (s, i) => {
-			if(pointCollision(x, y, s) && selectedObject === constPlayer) {
-				player.splice(i, 1);
+			if(pointCollision(x, y, s) && selectedObject === constSpikesBlock) {
+				spikesBlocks.splice(i, 1);
 				thereIsADeletedObject = true;
+				addToHistory(deletedObjectX, deletedObjectY, constSpikesBlock);
 			}
 		});
 	}
@@ -1919,50 +1998,87 @@ function clicking() {
 		if(pointDistance(deletedObjectPoint, {x: mouseX, y: mouseY}) > Math.max(gridHeight, gridWidth)) {
 			deletedObjectPoint.x = deletedObjectPoint.y = -width;
 			if(click) {
-				let x = mouseX - mouseX % gridWidth,
-					y = mouseY - mouseY % gridHeight;
-				if(!playing)
-					destroyObject(x, y);
-				if(!rightClick) {
-					switch(selectedObject) {
-						case constBlock:
-							if(!playing)
-							new Block({
-								x: x,
-								y: y
-							});
-							break;
-						case constEnemy:
-							if(!playing)
-							new Enemy({
-								id: ++enemyCounter,
-								x: x,
-								y: y
-							});
-							break;
-						case constPlayer:
-							if(!playing)
-							new Player({
-								x: x,
-								y: y
-							});
-							break;
-						case constSpikesBlock:
-							if(!playing)
-							new SpikesBlock({
-								x: x,
-								y: y
-							});
-							break;
-						case constEraser:
-							break;
-						default:
-							console.log('No object selected.');
-							break;
+				if(!playing) {
+					let x = mouseX - mouseX % gridWidth,
+						y = mouseY - mouseY % gridHeight;
+					let deletedObject = getObject(x, y);
+					let addANewObject = true;
+					if(deletedObject) {
+						if(deletedObject.object == selectedObject)
+							addANewObject = false;
+					}
+					if(addANewObject || rightClick) {
+						destroyObject(x, y);
+						if(deletedObject) {
+							let objX = x / gridWidth,
+								objY = y / gridHeight;
+							addToHistory(objX, objY, deletedObject.object);
+						}
+						if(!rightClick) {
+							switch(selectedObject) {
+								case constBlock:
+									new Block({
+										x: x,
+										y: y
+									});
+									break;
+								case constEnemy:
+									new Enemy({
+										id: ++enemyCounter,
+										x: x,
+										y: y
+									});
+									break;
+								case constPlayer:
+									new Player({
+										x: x,
+										y: y
+									});
+									break;
+								case constSpikesBlock:
+									new SpikesBlock({
+										x: x,
+										y: y
+									});
+									break;
+								case constEraser:
+									break;
+								default:
+									console.log('No object selected.');
+									break;
+							}
+							let objX = x / gridWidth,
+								objY = y / gridHeight;
+							addToHistory(objX, objY);
+						}
 					}
 				}
 			}
 		}
+	}
+}
+
+function addToHistory(x, y, deletedObject = false) {
+	if(lastActions.length >= historyLimit)
+		lastActions.splice(0, 1);
+	if(!deletedObject) { // theres no deleted object, its an added object then
+		if(selectedObject > constEraser && selectedObject <= constSpikesBlock) {
+			let objectAdded = {x: x, y: y, object: selectedObject};
+			let itsANewObject = true;
+			if(lastActions.length > 0)
+				if(lastActions.slice(-1)[0].action == constAdd
+				&& lastActions.slice(-1)[0].object.x == objectAdded.x
+				&& lastActions.slice(-1)[0].object.y == objectAdded.y
+				&& lastActions.slice(-1)[0].object.object == objectAdded.object)
+					itsANewObject = false;
+			/**/
+			if(itsANewObject)
+				lastActions.push({action: constAdd, object: objectAdded});
+		}
+	}
+	else { // there IS a deleted object
+		let objectDeleted = {x: x, y: y, object: deletedObject};
+		lastActions.push({action: constDelete, object: objectDeleted});
 	}
 }
 
