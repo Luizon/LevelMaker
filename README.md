@@ -19,6 +19,8 @@
 	Y: Change the vertical number of cells
 	alt + O: Open a level
 	alt + S: Save current level
+	alt + Z: Undo
+	control + Z: Undo
 
 ## Game controls
 
@@ -30,6 +32,12 @@
 	
 ## TODO list
 	
+	[ ] Agregar objetos obtenibles (la típica moneda, I guess)
+	[ ] Agregar un objetivo
+		¿vencer todos los enemigos?
+		¿conseguir todos los objetos obtenibles?
+		[ ] Agregar un mensaje de ¡Felicidades! o algo al conseguir el objetivo
+	
 	[x] Agregar botón de guardar nivel
 	[x] Agregar botón de cargar nivel
 	[ ] Agregar gameplay para touch screen
@@ -39,7 +47,7 @@
 			[ ] Animar el joystick con suavidad
 		[ ] Que el joystick se mueva donde el dedo, para facilitar el movimiento en screen
 	
-	[ ] Reparar
+	[ ] Reparar colisiones
 		[ ] colisión con block del jugador
 			[ ] colisión lateral: No quiere colaborar con los saltos cuando la resolución es grande.
 			[x] colisión vertical: Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
@@ -53,13 +61,18 @@
 	[x] Hacer que el objeto del menú desplegado no se vea pixeleado
 	[x] Evitar que se pueda borrar objetos en modo play
 	[ ] Agregar ctrl + z
-		[ ] Investigar como funciona esto ¿Es creando un historial de estados y cargándolos?
-		[ ] Hacer el sistema de ctrl + z
+		[x] Hacer un sistema de pila de objetos añadidos
+		[x] Agregar también objetos eliminados a la pila
+		[x] Hacer magia para que funcione
+		[x] Limitar a x movimientos la pila
+		[ ] Agregar control y
 	
 	[ ] Mejorar las nubes
 		[ ] Hacer más redonditas a las nubes, menos círculos
 			[ ] Evitar que grandes resoluciones hagan más feas las nubes
 		[x] Hacer que la cantidad de nubes sea relativo a la anchura de ventana
+		[ ] Corregir para que la velocidad sea relativamente la misma sin importar la resolución
+			O que sea relativo a gridX como mínimo
 	
 	[x] Mejorar los bloques
 		[x] Hacer que identifiquen que bloques les rodean para adaptar el pasto
