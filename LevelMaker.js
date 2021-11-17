@@ -834,8 +834,29 @@ class Board {
 				y: sampleObjectCanvas.width/5,
 				width: this.topHeight/4,
 				height: this.topHeight/4,
+				alpha: 1,
+				canvas: 0,
 				color: "#FFF",
 			};
+			
+			let closeCanvas = document.createElement('canvas');
+			let closeCtx = closeCanvas.getContext('2d');
+			closeCtx.fillStyle = this.closeBoard.color;
+			drawCircle({
+				x: 0, y: 0, width: this.topHeight/4, height: this.topHeight/4
+			}, closeCtx);
+			closeCtx.lineWidth = Math.max(1, width/180);
+			closeCtx.strokeStyle = "#800";
+			let crossedLine = {
+				x1: this.closeBoard.width/4,
+				y1: this.closeBoard.height/4,
+				x2: this.closeBoard.width/4*3,
+				y2: this.closeBoard.height/4*3,
+			};
+			drawLine(crossedLine, closeCtx);
+			drawLine(crossedLine.x2, crossedLine.y1, crossedLine.x1, crossedLine.y2, closeCtx);
+			this.closeBoard.canvas = closeCanvas;
+			
 			
 			let undoCanvas = document.createElement('canvas');
 			let undoCtx = undoCanvas.getContext('2d');
@@ -845,6 +866,7 @@ class Board {
 				y: sampleObjectCanvas.width/5 + this.topHeight/5 * 3,
 				width: this.topHeight/4,
 				height: this.topHeight/4,
+				alpha: 1,
 				canvas: 0
 			};
 			
@@ -868,6 +890,7 @@ class Board {
 				y: (this.topHeight - displayedBoardSampleObjectBoxSize) / 2,
 				width: displayedBoardSampleObjectBoxSize,
 				height: displayedBoardSampleObjectBoxSize,
+				alpha: 1,
 				borderRadius: displayedBoardSampleObjectBoxSize/5,
 			};
 			let displayedBoardSampleObjectImageSize = 2 * this.displayedBoardSampleObjectBox.width/3;
@@ -901,12 +924,14 @@ class Board {
 			this.leftArrow = {
 				x: this.displayedBoardSampleObjectBox.x - arrowSize/4,
 				y: (this.topHeight - arrowSize) / 2,
+				alpha: 1,
 				width: -arrowSize,
 				height: arrowSize
 			};
 			this.rightArrow = {
 				x: this.displayedBoardSampleObjectBox.x + this.displayedBoardSampleObjectBox.width + arrowSize/4,
 				y: (this.topHeight - arrowSize) / 2,
+				alpha: 1,
 				width: arrowSize,
 				height: arrowSize
 			};
@@ -917,6 +942,7 @@ class Board {
 				y: height - this.bottomHeight/6*5,
 				width: this.bottomHeight/3*2,
 				height: this.bottomHeight/3*2,
+				alpha: 1,
 				turnedOnColor: "#FFF",
 				turnedOffColor: "#98B"
 			}
@@ -925,6 +951,7 @@ class Board {
 				y: height - this.bottomHeight/6*5,
 				width: this.bottomHeight,
 				height: this.bottomHeight/3*2,
+				alpha: 1,
 				borderRadius: this.bottomHeight/6,
 				color: "#FFF",
 			}
@@ -933,6 +960,7 @@ class Board {
 				y: height - this.bottomHeight/6*5,
 				width: this.bottomHeight,
 				height: this.bottomHeight/3*2,
+				alpha: 1,
 				borderRadius: this.bottomHeight/6,
 				color: "#FFF",
 			}
@@ -943,6 +971,7 @@ class Board {
 				y: 0,
 				width: sampleObjectCanvas.width,
 				height: sampleObjectCanvas.height,
+				alpha: 1,
 				borderRadius: sampleObjectCanvas.width/4,
 				color: "#FFF",
 			};
@@ -952,6 +981,7 @@ class Board {
 				y: sampleObjectCanvas.width/5,
 				width: this.topHeight/4,
 				height: this.topHeight/4,
+				alpha: 1,
 				borderRadius: this.topHeight/16,
 				canvas: 0,
 			};
@@ -1017,6 +1047,7 @@ class Board {
 				y: playCanvas.width/5,
 				width: playCanvas.width,
 				height: playCanvas.height,
+				alpha: 1,
 				playCanvas: playCanvas, //"#0A0",
 				stopCanvas: stopCanvas //"#A00"
 			};
@@ -1068,6 +1099,7 @@ class Board {
 				y: this.eraseAll.y + saveCanvas.height/5 * 6,
 				width: saveCanvas.width,
 				height: saveCanvas.height,
+				alpha: 1,
 				canvas: saveCanvas
 			};
 			
@@ -1095,6 +1127,7 @@ class Board {
 				y: this.eraseAll.y + loadCanvas.height/5 * 12,
 				width: loadCanvas.width,
 				height: loadCanvas.height,
+				alpha: 1,
 				canvas: loadCanvas
 			};
 			
@@ -1146,23 +1179,18 @@ class Board {
 		
 		// top things
 			// close button
-			ctx.fillStyle = this.closeBoard.color;
-			drawCircle(this.closeBoard, ctx);
-			ctx.lineWidth = Math.max(1, width/180);
-			ctx.strokeStyle = "#800";
-			let crossedLine = {
-				x1: this.closeBoard.x + this.closeBoard.width/4,
-				y1: this.closeBoard.y + this.closeBoard.height/4,
-				x2: this.closeBoard.x + this.closeBoard.width/4*3,
-				y2: this.closeBoard.y + this.closeBoard.height/4*3,
-			};
-			drawLine(crossedLine, ctx);
-			drawLine(crossedLine.x2, crossedLine.y1, crossedLine.x1, crossedLine.y2, ctx);
+			ctx.globalAlpha = this.closeBoard.alpha;
+			ctx.drawImage(this.closeBoard.canvas, this.closeBoard.x, this.closeBoard.y);
 			
+			if(lastActions.length == 0)
+				ctx.globalAlpha = .5;
+			else
+				ctx.globalAlpha = this.buttonUndo.alpha;
 			ctx.drawImage(this.buttonUndo.canvas, this.buttonUndo.x, this.buttonUndo.y);
 			
 			// white sample object box
 			ctx.fillStyle = "#FFF";
+			ctx.globalAlpha = this.displayedBoardSampleObjectBox.alpha;
 			drawRoundedRect(this.displayedBoardSampleObjectBox, ctx);			
 			// sample object image
 			ctx.drawImage(this.displayedBoardSampleObject[selectedObject].canvas,
@@ -1171,6 +1199,7 @@ class Board {
 			);
 			// sample object and sample object name
 			ctx.fillStyle = "#FFF";
+			ctx.globalAlpha = 1;
 			drawRoundedRect({
 				x: this.displayedBoardSampleObjectBox.x,
 				y: this.displayedBoardSampleObjectBox.y + this.topHeight - this.fontSize/3,
@@ -1185,19 +1214,27 @@ class Board {
 			
 			// arrows
 			ctx.fillStyle = "#845FCC";
+			ctx.globalAlpha = this.rightArrow.alpha;
 			drawTriangle(this.rightArrow, ctx);
+			ctx.globalAlpha = this.leftArrow.alpha;
 			drawTriangle(this.leftArrow, ctx);
 			
 			// erase, save and load buttons
+			if(levelIsEmpty())
+				ctx.globalAlpha = .5;
+			else
+				ctx.globalAlpha = this.eraseAll.alpha;
 			ctx.drawImage(this.eraseAll.canvas, this.eraseAll.x, this.eraseAll.y);
+			ctx.globalAlpha = this.buttonSave.alpha;
 			ctx.drawImage(this.buttonSave.canvas, this.buttonSave.x, this.buttonSave.y);
+			ctx.globalAlpha = this.buttonLoad.alpha;
 			ctx.drawImage(this.buttonLoad.canvas, this.buttonLoad.x, this.buttonLoad.y);
 		
 		// bottom things
 			// grid button
 			ctx.fillStyle = displayedGrid ? this.gridButton.turnedOnColor : this.gridButton.turnedOffColor;
+			ctx.globalAlpha = this.gridButton.alpha;
 			drawCircle(this.gridButton, ctx);
-			//drawRoundedRect(this.gridButton, ctx);
 			ctx.lineWidth = Math.max(1, width/400);
 			ctx.strokeStyle = "#000";
 			let horizontalLine = {
@@ -1218,13 +1255,17 @@ class Board {
 			drawLine(verticalLine.x1, verticalLine.y1 + this.gridButton.height/3, verticalLine.x2 , verticalLine.y2 + this.gridButton.height/3, ctx);
 			
 			// grid buttons
-			ctx.fillStyle = this.gridYButtom.color;
+			ctx.font = this.fontSize + "px sans-serif";
+			ctx.fillStyle = "#FFF";
+			ctx.globalAlpha = this.gridYButtom.alpha;
 			drawRoundedRect(this.gridYButtom, ctx);
+			ctx.fillStyle = "#640999";
+			drawString(this.gridYButtom.x + this.bottomHeight/10, this.gridYButtom.y + this.gridYButtom.height/3*2, 'Y: '+gridY, ctx);
+			ctx.fillStyle = "#FFF";
+			ctx.globalAlpha = this.gridXButtom.alpha;
 			drawRoundedRect(this.gridXButtom, ctx);
 			ctx.fillStyle = "#640999";
-			ctx.font = this.fontSize + "px sans-serif";
 			drawString(this.gridXButtom.x + this.bottomHeight/10, this.gridXButtom.y + this.gridXButtom.height/3*2, 'X: '+gridX, ctx);
-			drawString(this.gridYButtom.x + this.bottomHeight/10, this.gridYButtom.y + this.gridYButtom.height/3*2, 'Y: '+gridY, ctx);
 	}
 }
 
@@ -1640,7 +1681,7 @@ function addObject(x, y, object) {
 
 fileInput.addEventListener('change', e => { // load file
 	let flag = false;
-	if(player.length + blocks.length + enemies.length + spikesBlocks.length > 0)
+	if(levelIsEmpty())
 		flag = true;
 	if(flag == true)
 		if(!confirm("Are you sure you want to load a new level?\nYou'll lose all your progress"))
@@ -1700,6 +1741,7 @@ canvas.addEventListener("contextmenu", ctxM => {
 
 // mouse events
 canvas.addEventListener("mousedown", md => {
+	let inMouseAlpha = .75;
 	if(!board.displayed) {
 		let sampleObjectButtom = {
 			x: sampleObjectCanvas.width/5,
@@ -1720,48 +1762,81 @@ canvas.addEventListener("mousedown", md => {
 	else {
 		if(pointCollision(md.x, md.y, board.closeBoard)) {
 			board.displayed = !board.displayed;
+			board.closeBoard.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.closeBoard.alpha = 1;
 		if(pointCollision(md.x, md.y, board.buttonUndo)) {
 			undo();
+			board.buttonUndo.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.buttonUndo.alpha = 1;
 		if(pointCollision(md.x, md.y, board.leftArrow)) {
 			leftArrowFunction();
+			board.leftArrow.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.leftArrow.alpha = 1;
 		if(pointCollision(md.x, md.y, board.displayedBoardSampleObjectBox)) {
 			board.displayed = !board.displayed;
+			board.displayedBoardSampleObjectBox.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.displayedBoardSampleObjectBox.alpha = 1;
 		if(pointCollision(md.x, md.y, board.rightArrow)) {
 			rightArrowFunction();
+			board.rightArrow.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.rightArrow.alpha = 1;
 		if(pointCollision(md.x, md.y, board.buttonSave)) {
 			downloadLevel();
+			board.buttonSave.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.buttonSave.alpha = 1;
 		if(pointCollision(md.x, md.y, board.buttonLoad)) {
 			fileInput.click();
+			board.buttonLoad.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.buttonLoad.alpha = 1;
 		if(pointCollision(md.x, md.y, board.eraseAll)) {
 			deleteEverything(true);
+			board.eraseAll.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.eraseAll.alpha = 1;
 		if(pointCollision(md.x, md.y, board.gridYButtom)) {
 			setGridY();
+			board.gridYButtom.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.gridYButtom.alpha = 1;
 		if(pointCollision(md.x, md.y, board.gridButton)) {
 			displayedGrid = !displayedGrid;
+			board.gridButton.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.gridButton.alpha = 1;
 		if(pointCollision(md.x, md.y, board.gridXButtom)) {
 			setGridX();
+			board.gridXButtom.alpha = inMouseAlpha;
 			return;
 		}
+		else
+			board.gridXButtom.alpha = 1;
 	}
 	if(md.which == 1 || md.which == 3) {
 		click = true;
@@ -1782,6 +1857,75 @@ canvas.addEventListener("mouseup", mu => {
 canvas.addEventListener("mousemove", mm => {
 	mouseX = mm.x;
 	mouseY = mm.y;
+	let inMouseAlpha = .87;
+	if(board.displayed){
+		if(pointCollision(mm.x, mm.y, board.closeBoard)) {
+			board.closeBoard.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.closeBoard.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.buttonUndo)) {
+			board.buttonUndo.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.buttonUndo.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.leftArrow)) {
+			board.leftArrow.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.leftArrow.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.displayedBoardSampleObjectBox)) {
+			board.displayedBoardSampleObjectBox.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.displayedBoardSampleObjectBox.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.rightArrow)) {
+			board.rightArrow.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.rightArrow.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.buttonSave)) {
+			board.buttonSave.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.buttonSave.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.buttonLoad)) {
+			board.buttonLoad.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.buttonLoad.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.eraseAll)) {
+			board.eraseAll.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.eraseAll.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.gridYButtom)) {
+			board.gridYButtom.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.gridYButtom.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.gridButton)) {
+			board.gridButton.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.gridButton.alpha = 1;
+		if(pointCollision(mm.x, mm.y, board.gridXButtom)) {
+			board.gridXButtom.alpha = inMouseAlpha;
+			return;
+		}
+		else
+			board.gridXButtom.alpha = 1;
+	}
 })
 
 // key events
@@ -1913,9 +2057,16 @@ function anyCollision(object, array) {
     return false;
 }
 
+function countObjects() {
+	return player.length + blocks.length + enemies.length + spikesBlocks.length;
+}
+
+function levelIsEmpty() {
+	return countObjects() == 0;
+}
 
 function deleteEverything(flag) {
-	if(player.length + blocks.length + enemies.length + spikesBlocks.length == 0)
+	if(levelIsEmpty())
 		return;
 	if(typeof flag != 'undefined')
 		if(flag == true)
@@ -1925,6 +2076,7 @@ function deleteEverything(flag) {
 	blocks.splice(0, blocks.length);
 	enemies.splice(0, enemies.length);
 	spikesBlocks.splice(0, spikesBlocks.length);
+	lastActions.length = 0;
 	playing = false;
 }
 
