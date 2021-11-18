@@ -11,7 +11,7 @@ var fileInput = document.getElementById("file-input");
 // constants
 var width,
 	height;
-var fps;
+var fps = 60;
 var hudFontSize,
 	hudFont;
 const constEraser = 0,
@@ -69,7 +69,7 @@ function initializeEverything() {
     canvas.height = height;
 	sampleObjectCanvas.width = (width > height? height : width)/7;
 	sampleObjectCanvas.height = sampleObjectCanvas.width;
-    fps = 60;
+    //fps = 60;
     hudFontSize = (width < height ? width : height)/10;
     hudFont = hudFontSize + "px Arial";
 
@@ -492,8 +492,8 @@ class Player {
 				let reducedRect = {
 					x: this.x + this.hspeed * this.direction + this.width/5,
 					width: this.width - this.width/5*2,
-					y: this.y + 1 + this.height/3, //y: this.y + this.height/4,
-					height: - 2 + this.height3*2 //height: this.height/4*3 + 1
+					y: this.y + 1 + this.height/6, //y: this.y + this.height/4,
+					height: - 2 + this.height6*5 //height: this.height/4*3 + 1
 				}
 				if(blockCollision(this.getReducedRect())) {
 					blocks.forEach( (b) => {
@@ -946,7 +946,7 @@ class Board {
 				turnedOnColor: "#FFF",
 				turnedOffColor: "#98B"
 			}
-			this.gridYButtom = {
+			this.gridYButton = {
 				x: this.gridButton.x + this.bottomHeight,
 				y: height - this.bottomHeight/6*5,
 				width: this.bottomHeight,
@@ -955,7 +955,7 @@ class Board {
 				borderRadius: this.bottomHeight/6,
 				color: "#FFF",
 			}
-			this.gridXButtom = {
+			this.gridXButton = {
 				x: this.gridButton.x - this.bottomHeight/3*4,
 				y: height - this.bottomHeight/6*5,
 				width: this.bottomHeight,
@@ -971,7 +971,7 @@ class Board {
 				y: 0,
 				width: sampleObjectCanvas.width,
 				height: sampleObjectCanvas.height,
-				alpha: 1,
+				alpha: .5,
 				borderRadius: sampleObjectCanvas.width/4,
 				color: "#FFF",
 			};
@@ -1047,7 +1047,7 @@ class Board {
 				y: playCanvas.width/5,
 				width: playCanvas.width,
 				height: playCanvas.height,
-				alpha: 1,
+				alpha: .5,
 				playCanvas: playCanvas, //"#0A0",
 				stopCanvas: stopCanvas //"#A00"
 			};
@@ -1144,16 +1144,16 @@ class Board {
 				drawRoundedRect(this.undisplayedBoardSampleObjectBox, sampleObjetcCtx);
 				sampleObject[selectedObject].draw(sampleObjetcCtx);
 				let position = sampleObjectCanvas.width/5;
-				ctx.globalAlpha = ".5";
+				ctx.globalAlpha = this.undisplayedBoardSampleObjectBox.alpha;
+				//ctx.globalAlpha = ".5";
 				ctx.drawImage(sampleObjectCanvas, position, position);
-				ctx.globalAlpha = "1";
 			}
 			
 			// playing
 			let thePlayImage = this.buttonPlay.playCanvas;
 			if(playing)
 				thePlayImage = this.buttonPlay.stopCanvas;
-			ctx.globalAlpha = ".5";
+			ctx.globalAlpha = this.buttonPlay.alpha;
 			ctx.drawImage(thePlayImage, this.buttonPlay.x, this.buttonPlay.y)
 			ctx.globalAlpha = "1";
 		}
@@ -1257,15 +1257,15 @@ class Board {
 			// grid buttons
 			ctx.font = this.fontSize + "px sans-serif";
 			ctx.fillStyle = "#FFF";
-			ctx.globalAlpha = this.gridYButtom.alpha;
-			drawRoundedRect(this.gridYButtom, ctx);
+			ctx.globalAlpha = this.gridYButton.alpha;
+			drawRoundedRect(this.gridYButton, ctx);
 			ctx.fillStyle = "#640999";
-			drawString(this.gridYButtom.x + this.bottomHeight/10, this.gridYButtom.y + this.gridYButtom.height/3*2, 'Y: '+gridY, ctx);
+			drawString(this.gridYButton.x + this.bottomHeight/10, this.gridYButton.y + this.gridYButton.height/3*2, 'Y: '+gridY, ctx);
 			ctx.fillStyle = "#FFF";
-			ctx.globalAlpha = this.gridXButtom.alpha;
-			drawRoundedRect(this.gridXButtom, ctx);
+			ctx.globalAlpha = this.gridXButton.alpha;
+			drawRoundedRect(this.gridXButton, ctx);
 			ctx.fillStyle = "#640999";
-			drawString(this.gridXButtom.x + this.bottomHeight/10, this.gridXButtom.y + this.gridXButtom.height/3*2, 'X: '+gridX, ctx);
+			drawString(this.gridXButton.x + this.bottomHeight/10, this.gridXButton.y + this.gridXButton.height/3*2, 'X: '+gridX, ctx);
 	}
 }
 
@@ -1412,7 +1412,6 @@ function drawGrid(ctx) {
 		drawLine(0, y*gridHeight, width, y*gridHeight, ctx);
 	}
 }
-
 
 function drawTrapeze(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) {
 	let x1, x2, x3, x4, y1, y2, y3, y4, ctx;
@@ -1681,12 +1680,12 @@ function addObject(x, y, object) {
 
 fileInput.addEventListener('change', e => { // load file
 	let flag = false;
-	if(levelIsEmpty())
+	if(!levelIsEmpty())
 		flag = true;
 	if(flag == true)
 		if(!confirm("Are you sure you want to load a new level?\nYou'll lose all your progress"))
-			return;  var archivo = e.target.files[0];
-
+			return;  
+	var archivo = e.target.files[0];
 	if (!archivo) {
 		return;
 	}
@@ -1717,6 +1716,9 @@ canvas.addEventListener('touchstart', touch => {
 		y = touch.changedTouches[0].clientY;
 	mouseX = x;
 	mouseY = y;
+	if(mouseDown({x: x, y: y}))
+		return;
+	console.log({x: x, y: y});
 	click = true;
 	singleClick(x, y);
 });
@@ -1726,12 +1728,13 @@ canvas.addEventListener('touchmove', touch => {
 		y = touch.changedTouches[0].clientY;
 	mouseX = x;
 	mouseY = y;
+	if(mouseMove({x: x, y: y}))
+		return;
 	click = true;
 });
 
 canvas.addEventListener('touchend', touch => {
-	click = rightClick = false;
-	deletedObjectPoint.x = deletedObjectPoint.y = - width;
+	mouseUp();
 });
 
 // disabling the right click menu
@@ -1741,103 +1744,8 @@ canvas.addEventListener("contextmenu", ctxM => {
 
 // mouse events
 canvas.addEventListener("mousedown", md => {
-	let inMouseAlpha = .75;
-	if(!board.displayed) {
-		let sampleObjectButtom = {
-			x: sampleObjectCanvas.width/5,
-			y: sampleObjectCanvas.height/5,
-			width: board.undisplayedBoardSampleObjectBox.width,
-			height: board.undisplayedBoardSampleObjectBox.height,
-		}
-		if(!playing)
-			if(pointCollision(md.x, md.y, sampleObjectButtom)) {
-				board.displayed = !board.displayed;
-				return;
-			}
-		if(pointCollision(md.x, md.y, board.buttonPlay)) {
-			playFunction();
-			return;
-		}
-	}
-	else {
-		if(pointCollision(md.x, md.y, board.closeBoard)) {
-			board.displayed = !board.displayed;
-			board.closeBoard.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.closeBoard.alpha = 1;
-		if(pointCollision(md.x, md.y, board.buttonUndo)) {
-			undo();
-			board.buttonUndo.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.buttonUndo.alpha = 1;
-		if(pointCollision(md.x, md.y, board.leftArrow)) {
-			leftArrowFunction();
-			board.leftArrow.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.leftArrow.alpha = 1;
-		if(pointCollision(md.x, md.y, board.displayedBoardSampleObjectBox)) {
-			board.displayed = !board.displayed;
-			board.displayedBoardSampleObjectBox.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.displayedBoardSampleObjectBox.alpha = 1;
-		if(pointCollision(md.x, md.y, board.rightArrow)) {
-			rightArrowFunction();
-			board.rightArrow.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.rightArrow.alpha = 1;
-		if(pointCollision(md.x, md.y, board.buttonSave)) {
-			downloadLevel();
-			board.buttonSave.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.buttonSave.alpha = 1;
-		if(pointCollision(md.x, md.y, board.buttonLoad)) {
-			fileInput.click();
-			board.buttonLoad.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.buttonLoad.alpha = 1;
-		if(pointCollision(md.x, md.y, board.eraseAll)) {
-			deleteEverything(true);
-			board.eraseAll.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.eraseAll.alpha = 1;
-		if(pointCollision(md.x, md.y, board.gridYButtom)) {
-			setGridY();
-			board.gridYButtom.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.gridYButtom.alpha = 1;
-		if(pointCollision(md.x, md.y, board.gridButton)) {
-			displayedGrid = !displayedGrid;
-			board.gridButton.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.gridButton.alpha = 1;
-		if(pointCollision(md.x, md.y, board.gridXButtom)) {
-			setGridX();
-			board.gridXButtom.alpha = inMouseAlpha;
-			return;
-		}
-		else
-			board.gridXButtom.alpha = 1;
-	}
+	if(mouseDown({x: md.x, y: md.y}))
+		return;
 	if(md.which == 1 || md.which == 3) {
 		click = true;
 		if(md.which == 3)
@@ -1846,19 +1754,150 @@ canvas.addEventListener("mousedown", md => {
 	singleClick(md.x, md.y);
 });
 
+function mouseDown(md) {
+	let inMouseAlpha = .75;
+	let returnNow = false;
+	if(!board.displayed) {
+		let sampleObjectButton = {
+			x: sampleObjectCanvas.width/5,
+			y: sampleObjectCanvas.height/5,
+			width: board.undisplayedBoardSampleObjectBox.width,
+			height: board.undisplayedBoardSampleObjectBox.height,
+		}
+		if(!playing)
+			if(pointCollision(md.x, md.y, sampleObjectButton)) {
+				board.displayed = !board.displayed;
+				returnNow = true;
+			}
+		if(pointCollision(md.x, md.y, board.buttonPlay)) {
+			playFunction();
+			returnNow = true;
+		}
+	}
+	else {
+		if(pointCollision(md.x, md.y, board.closeBoard)) {
+			board.displayed = !board.displayed;
+			board.closeBoard.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.closeBoard.alpha = 1;
+		if(pointCollision(md.x, md.y, board.buttonUndo)) {
+			undo();
+			board.buttonUndo.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.buttonUndo.alpha = 1;
+		if(pointCollision(md.x, md.y, board.leftArrow)) {
+			leftArrowFunction();
+			board.leftArrow.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.leftArrow.alpha = 1;
+		if(pointCollision(md.x, md.y, board.displayedBoardSampleObjectBox)) {
+			board.displayed = !board.displayed;
+			board.displayedBoardSampleObjectBox.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.displayedBoardSampleObjectBox.alpha = 1;
+		if(pointCollision(md.x, md.y, board.rightArrow)) {
+			rightArrowFunction();
+			board.rightArrow.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.rightArrow.alpha = 1;
+		if(pointCollision(md.x, md.y, board.buttonSave)) {
+			downloadLevel();
+			board.buttonSave.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.buttonSave.alpha = 1;
+		if(pointCollision(md.x, md.y, board.buttonLoad)) {
+			fileInput.click();
+			board.buttonLoad.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.buttonLoad.alpha = 1;
+		if(pointCollision(md.x, md.y, board.eraseAll)) {
+			deleteEverything(true);
+			board.eraseAll.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.eraseAll.alpha = 1;
+		if(pointCollision(md.x, md.y, board.gridYButton)) {
+			setGridY();
+			board.gridYButton.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.gridYButton.alpha = 1;
+		if(pointCollision(md.x, md.y, board.gridButton)) {
+			displayedGrid = !displayedGrid;
+			board.gridButton.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.gridButton.alpha = 1;
+		if(pointCollision(md.x, md.y, board.gridXButton)) {
+			setGridX();
+			board.gridXButton.alpha = inMouseAlpha;
+			returnNow = true;
+		}
+		else
+			board.gridXButton.alpha = 1;
+	}
+	return returnNow;
+}
+
 canvas.addEventListener("mouseup", mu => {
+	mouseUp();
+})
+
+function mouseUp() {
 	blocks.forEach( (b, i) => {
 		b.updateCanvas(true);
 	})
 	click = rightClick = false;
 	deletedObjectPoint.x = deletedObjectPoint.y = - width;
-})
+}
 
 canvas.addEventListener("mousemove", mm => {
+	mouseMove({x: mm.x, y: mm.y});
+})
+
+function mouseMove(mm) {
 	mouseX = mm.x;
 	mouseY = mm.y;
 	let inMouseAlpha = .87;
-	if(board.displayed){
+	let sampleObjectButton = {
+			x: sampleObjectCanvas.width/5,
+			y: sampleObjectCanvas.height/5,
+			width: board.undisplayedBoardSampleObjectBox.width,
+			height: board.undisplayedBoardSampleObjectBox.height,
+		}
+	if(!board.displayed){
+		if(pointCollision(mm.x, mm.y, board.buttonPlay)) {
+			board.buttonPlay.alpha = 1;
+			return;
+		}
+		else
+			board.buttonPlay.alpha = .5;
+		if(!playing)
+			if(pointCollision(mm.x, mm.y, sampleObjectButton)) {
+				board.undisplayedBoardSampleObjectBox.alpha = 1;
+				return;
+			}
+			else
+				board.undisplayedBoardSampleObjectBox.alpha = .5;
+	}
+	else {
 		if(pointCollision(mm.x, mm.y, board.closeBoard)) {
 			board.closeBoard.alpha = inMouseAlpha;
 			return;
@@ -1907,26 +1946,26 @@ canvas.addEventListener("mousemove", mm => {
 		}
 		else
 			board.eraseAll.alpha = 1;
-		if(pointCollision(mm.x, mm.y, board.gridYButtom)) {
-			board.gridYButtom.alpha = inMouseAlpha;
+		if(pointCollision(mm.x, mm.y, board.gridYButton)) {
+			board.gridYButton.alpha = inMouseAlpha;
 			return;
 		}
 		else
-			board.gridYButtom.alpha = 1;
+			board.gridYButton.alpha = 1;
 		if(pointCollision(mm.x, mm.y, board.gridButton)) {
 			board.gridButton.alpha = inMouseAlpha;
 			return;
 		}
 		else
 			board.gridButton.alpha = 1;
-		if(pointCollision(mm.x, mm.y, board.gridXButtom)) {
-			board.gridXButtom.alpha = inMouseAlpha;
+		if(pointCollision(mm.x, mm.y, board.gridXButton)) {
+			board.gridXButton.alpha = inMouseAlpha;
 			return;
 		}
 		else
-			board.gridXButtom.alpha = 1;
+			board.gridXButton.alpha = 1;
 	}
-})
+}
 
 // key events
 window.addEventListener("keydown", key => {
@@ -2156,12 +2195,12 @@ function singleClick(clickX, clickY) {
 		});
 	}
 	/**/
-	if(!thereIsADeletedObject)
-		clicking();
-	else {
+	if(thereIsADeletedObject) {
 		deletedObjectPoint.x = x;
 		deletedObjectPoint.y = y;
 	}
+	/*else
+		clicking();*/
 }
 
 function clicking() {

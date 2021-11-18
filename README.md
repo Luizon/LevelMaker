@@ -36,6 +36,7 @@
 	[ ] Agregar un objetivo
 		¿vencer todos los enemigos?
 		¿conseguir todos los objetos obtenibles?
+		¿llegar a un punto objetivo en el nivel?
 		[ ] Agregar un mensaje de ¡Felicidades! o algo al conseguir el objetivo
 	
 	[x] Agregar botón de guardar nivel
@@ -53,7 +54,9 @@
 			[x] colisión vertical: Deja muy preciso entrar a un cuadro cayendo o subiendo muy rápido.
 			[ ] choque vertical: pierde velocidad horizontal el chocar la cabeza del personaje
 			[ ] subir lateralmente: se teletransporta a arriba cuando falta poco para llegar, no debería
-		[ ] enemigo
+			[ ] a poca resolución y/o pocos FPS se clava en los techos al caer lentamente
+			[ ] atravieza la pared levemente al estar cerca de la orilla, lo que lo hace subir al instante a bloques o clavarse dejando softlockeado al jugador
+		[x] enemigo
 			[x] colisión con block, traspasa o se traba según cuantos blocks tiene a un lado el enemigo
 		
 	[x] Agregar un botón de limpiar pantalla (eliminar todos los objetos)
@@ -84,6 +87,16 @@
 		[x] Darle imagen
 		[x] Darle lógica de daño al jugador
 		[ ] Cambiar la imagen como hace el bloque para que no sean solo muchas bolas espinosas
+		
+	[ ] UI UX
+		[x] Agregar interacción tipo hover en botones
+		[ ] Agregar interacción de clicks
+		[ ] Hacer que los clicks y "hovers" convivan
+		[ ] Describir todo
+			[ ] Agregar una descripción a cada objeto
+			[ ] Mostrar la descripción en pantalla
+			[ ] Hacerlo bonito
+		[ ] Corregir el tamaño de fuente (si no es Arial no se ve bien, comprobado en Linux)
 	
 	[ ] Hacer un IA para el enemigo
 		[x] Hacer una variable de posición inicial para devolver al enemigo cuando el juego tenga playing = false
