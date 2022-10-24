@@ -1,6 +1,8 @@
 # Javascript Videogame Level Maker
 
-# This game is currently in development
+# This game was in development
+It is currently abandoned, game is a lil bit broke and also code is a lil bit messy.
+Is not that bad tho C:
 
 [try it online](https://luizon.github.io/LevelMaker/)
 
@@ -31,7 +33,8 @@
 	
 	
 ## TODO list
-	
+I'm not even sure why I put this here, heh, I also write it in spanish idk why tbh but yeh
+
 	[ ] Agregar objetos obtenibles (la típica moneda, I guess)
 	[ ] Agregar un objetivo
 		¿vencer todos los enemigos?
