@@ -8,25 +8,20 @@
             overflow-x: hidden;
             overflow-y: hidden;
         }
-		
-		input {
-			position: absolute;
-			left: 0px;
-			up: 0px;
-		}
     </style>
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
-          charset="UTF-8">
+    <meta name="viewport" />
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta charset="UTF-8" />
     <title>Level Maker 8]</title>
   </head>
   <body>
     <canvas id="sampleObject" hidden></canvas>
     <canvas id="canvas"> <!-- main one -->
-      Your browser don't allow canvas.
+      Your browser doesn't allow canvas.
     </canvas>
-	<input type="file" id="file-input" hidden />
+	  <input type="file" id="file-input" hidden />
     
-    <script src="./LevelMaker.js"></script>
+    <script src="./js/globals.js"></script>
+    <script src="./js/LevelMaker.js" type="module"></script>
   </body>
 </html>
