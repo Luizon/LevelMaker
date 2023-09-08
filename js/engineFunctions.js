@@ -2,6 +2,7 @@ import { Block } from "./objects/Block.js";
 import { Enemy } from "./objects/Enemy.js";
 import { Player } from "./objects/Player.js";
 import { SpikesBlock } from "./objects/SpikesBlock.js";
+import { addObject } from "./gameEvents.js";
 
 export function blockCollision(object) {
     return anyCollision(object, blocks);
