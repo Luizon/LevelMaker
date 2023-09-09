@@ -5,8 +5,8 @@ export class SpikesBlock extends GameObject {
 	constructor(json) {
 		super(json);
 		this.name = 'spikes';
-		this.color = json.color || "#BBB";
-		this.spikesColor = json.spikesColor || "#999";
+		this.color = json.color || "#999";
+		this.spikesColor = json.spikesColor || "#555";
 				
 		this.updateCanvas();
 		
@@ -30,14 +30,20 @@ export class SpikesBlock extends GameObject {
 		for(let i = 0 ; i < triangle.length ; i++)
 			drawTriangle(triangle[i], this.canvasCtx);
 	}
-	getReducedRect() {
+	getReducedRect(rect = {}) {
 		let redX = this.width/2;
 		let redY = this.height/2;
 		return {
-			x: redX/2,
-			y: redY/2,
+			x: (rect.x || 0) + redX/2,
+			y: (rect.y || 0) + redY/2,
 			width: this.width - redX,
 			height: this.height - redY,
 		};
+	}
+	getHitbox() {
+		return this.getReducedRect({
+			x: this.x,
+			y: this.y
+		});
 	}
 }

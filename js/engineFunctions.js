@@ -20,7 +20,7 @@ export function anyCollision(object, array) {
     let i = 0;
     let boxes = array.length;
     while(i < boxes) {
-        if(collides(object, array[i]))
+        if(collides(object, array[i].getHitbox()))
             return true;
         i++;
     }
@@ -60,11 +60,14 @@ export function playFunction() {
 		enemy.direction = 1;
 		enemy.moveEyes();
 		enemy.updateCanvas();
-		enemy.living = true;
+		enemy.dead = false;
+		enemy.alpha = 1;
 	});
 	player.forEach( (p) => {
-		p.x = p.xInit
-		p.y = p.yInit
+		p.alpha = 1;
+		p.dead = false;
+		p.x = p.xInit;
+		p.y = p.yInit;
 		p.direction = 1;
 		p.vspeed = 0;
 		p.moveEyes();
@@ -267,15 +270,14 @@ export function collides(obj1, obj2) {
     y21 = obj2.y,
     x22 = obj2.x + obj2.width,
     y22 = obj2.y + obj2.height;
-  if((x11 >= x21 && x11 <= x22)
-  || (x12 >= x21 && x12 <= x22)) {
-    if(y11==y21 || y11==y22
-    || y12==y21 || y12==y22)
+	// obj1 is inside obj2
+	if(((x11 >= x21 && x11 <= x22) || (x12 >= x21 && x12 <= x22))
+	&& ((y11 >= y21 && y11 <= y22) || (y12 >= y21 && y12 <= y22)))
       return true;
-    if((y12 > y21 && y12 < y22)
-    || (y11 > y21 && y11 < y22))
+	// obj2 is inside obj1
+	if(((x21 >= x11 && x21 <= x12) || (x22 >= x11 && x22 <= x12))
+	&& ((y21 >= y11 && y21 <= y12) || (y22 >= y11 && y22 <= y12)))
       return true;
-    }
   return false;
 }
 

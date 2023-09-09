@@ -15,7 +15,7 @@ fileInput.addEventListener('change', e => { // load file
 	}
 	var lector = new FileReader();
 	lector.onload = function(e) {
-	contenido = e.target.result;
+	let contenido = e.target.result;
 	//console.log(contenido);
 	let json = 0;
 	try {
@@ -23,7 +23,7 @@ fileInput.addEventListener('change', e => { // load file
 	} catch(error) {
 		console.error(error);
 		alert("There was an error loading your level."
-		+"\nThe file used is not a Level Maker file or it is corrupted."
+		+"\nThe loaded file is not a Level Maker file or it is corrupted."
 		+"\n\nTry again with another file or make a new level.");
 	}
 	if(json != 0)
@@ -293,102 +293,108 @@ let mouseMove = (mm) => {
 
 // key events
 window.addEventListener("keydown", key => {
-	//console.log(key.keyCode);
-	if(key.keyCode == 17) { // control
+	
+	if(key.key.toLowerCase() == "r") {
+		if(!playing)
+			return;
+		playing = false;
+		playFunction();
+		return;
+	}
+	if(key.key.toLowerCase() == "control") { 
 		control = true;
 		return;
 	}
-	if(key.keyCode == 18) { // alt
+	if(key.key.toLowerCase() == "alt") { 
 		alt = true;
 		return;
 	}
-	if(key.keyCode == 27) { // Escape
+	if(key.key.toLowerCase() == "escape") { 
 		if(!playing)
 			board.displayed = !board.displayed;
 		return;
 	}
-	if(key.keyCode == 83 && alt) { // alt + Q
+	if(key.key.toLowerCase() == "q" && alt) { 
 		alt = false;
 		downloadLevel();
-		//download("HOLA MANOLA", 'json.txt');
 		return;
 	}
-	if(key.keyCode == 79 && alt) { // alt + O
+	if(key.key.toLowerCase() == "o" && alt) { 
 		alt = false;
 		fileInput.click();
 		return;
 	}
-	if(key.keyCode == 37 || key.keyCode == 65) { // Left arrow or A key
+	if(key.key.toLowerCase() == "arrowleft" || key.key.toLowerCase() == "a") { 
 		leftKey = true;
 		rightKey = false;
 		leftArrowFunction();
 		return;
 	}
-	if(key.keyCode == 38 || key.keyCode == 87) { // Up arrow or W key
+	if(key.key.toLowerCase() == "arrowup" || key.key.toLowerCase() == "w") { 
 		upKey = true;
 		player.forEach( p => {
 			p.holdJump = true;
 		})
 		return;
 	}
-	if(key.keyCode == 39 || key.keyCode == 68) { // Right arrow or D key
+	if(key.key.toLowerCase() == "arrowright" || key.key.toLowerCase() == "d") { 
 		leftKey = false;
 		rightKey = true;
 		rightArrowFunction();
 		return;
 	}
-	if(key.keyCode >= 49 && key.keyCode <= 53) { // 1 2 3 4 5
-		selectedObject = key.keyCode - 49;
+	if(key.key.toLowerCase() >= "1" && key.key.toLowerCase() <= "5") { 
+		selectedObject = key.key.toLowerCase() - 1;
 		return;
 	}
-	if(key.keyCode == 67) { // C key
+	if(key.key.toLowerCase() == "c") { 
 		deleteEverything(true);
 		return;
 	}
-	if(key.keyCode == 71) { // G key
+	if(key.key.toLowerCase() == "g") { 
 		displayedGrid = !displayedGrid;
 		return;
 	}
-	if(key.keyCode == 80) { // P key
+	if(key.key.toLowerCase() == "p") { 
 		playFunction();
 		return;
 	}
-	if(key.keyCode == 88) { // X key
+	if(key.key.toLowerCase() == "x") { 
 		setGridX();
 		return;
 	}
-	if(key.keyCode == 89) { // Y key
+	if(key.key.toLowerCase() == "y") { 
 		setGridY();
 		return;
 	}
-	if(key.keyCode == 90 && (control || alt)) { // control Z or alt Z
+	if(key.key.toLowerCase() == "z" && (control || alt)) { 
 		undo();
 		return;
 	}
 });
 
 window.addEventListener("keyup", key => {
-	//console.log(key)
-	if(key.keyCode == 17) { // control
+	
+	if(key.key.toLowerCase() == "control") { 
 		control = false;
 		return;
 	}
-	if(key.keyCode == 18) { // alt
+	if(key.key.toLowerCase() == "alt") { 
 		alt = false;
 		return;
 	}
-	if(key.keyCode == 37 || key.keyCode == 65) { // Left arrow or A key
+	if(key.key.toLowerCase() == "arrowleft" || key.key.toLowerCase() == "a") { 
 		leftKey = false;
 		return;
 	}
-	if(key.keyCode == 38 || key.keyCode == 87) { // Up arrow or W key
+	if(key.key.toLowerCase() == "arrowup" || key.key.toLowerCase() == "w") { 
 		upKey = false;
 		player.forEach( p => {
 			p.holdJump = false;
 		})
 		return;
 	}
-	if(key.keyCode == 39 || key.keyCode == 68) { // Right arrow or D key
+	if(key.key.toLowerCase() == "arrowright" || key.key.toLowerCase() == "d") { 
 		rightKey = false;
 		return;
 	}

@@ -14,6 +14,8 @@ export class Cloud extends GameObject{
 		this.color = json.color || "#FFF";
 		this.speed = json.speed || Math.max(1, Math.random()*3);
 		
+		this.canvas.width = this.width;
+		this.canvas.height = this.height;
 		this.createCloudImage(true);
 	}
 	

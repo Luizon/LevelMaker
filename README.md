@@ -35,27 +35,43 @@ Biggest come back baby, let's try harder this time
 I was in spanish already, Imma let this like that for now
 
 	[ ] Agregar imagenes a este readme, para mejor entendimiento de las teclas y juego
+	[ ] Agregar una cámara que siga al jugador
+		[ ] En juego
+			[ ] Movimiento
+				[ ] Tiene movimiento suave
+				[ ] La cámara se eleva un poco si se sostiene hacia arriba
+				[ ] La cámara desciende un poco si se sostiene hacia abajo
+				[ ] La cámara se coloca hacia el frente de donde el jugador mira
+				[ ] La cámara respeta los bordes de los niveles
+			[ ] Permitir desplazamiento vertical en la cámara
+			[ ] Permitir desplazamiento horizontal en la cámara
+			[ ] Optimizar
+				[ ] Desactivar los objetos que están fuera del foco de la cámara
+					[ ] Blocks
+						[ ] Desactivar dibujo
+					[ ] SpikesBlocks
+						[ ] Desactivar dibujo
+					[ ] Enemies
+						[ ] Desactivar movimiento
+						[ ] Desactivar dibujo
+					[ ] Clouds
+						[ ] Desactivar dibujo
+		[ ] En editor
+			[ ] Agregar un tamaño máximo de nivel antes de que se active la cámara
+			[ ] Permitir desplazamiento vertical en la cámara
+			[ ] Permitir desplazamiento horizontal en la cámara
+			[ ] Dibujar cuadrado de cámara cuando el nivel sea muy grande
+			[ ] Agregar un tamaño máximo de nivel global
 	[ ] Agregar objetos obtenibles (la típica moneda, I guess)
 	[ ] Agregar un objetivo
 		¿vencer todos los enemigos?
 		¿conseguir todos los objetos obtenibles?
 		¿llegar a un punto objetivo en el nivel?
 		[ ] Agregar un mensaje de ¡Felicidades! o algo al conseguir el objetivo
-	[ ] Touch screen
-		[ ] Permitir que se pueda jugar
-		[ ] Dibujar un joystick donde toca para dar a entender como mueves al personaje
-			[ ] Animar el joystick sin suavidad
-			[ ] Animar el joystick con suavidad
-		[ ] Que el joystick se mueva donde el dedo, para facilitar el movimiento en screen
-	[ ] Colisiones
-		[ ] Reparar colisión con block del jugador
-			[ ] colisión lateral: No quiere colaborar con los saltos cuando la resolución es grande.
-			[ ] choque vertical: pierde velocidad horizontal el chocar la cabeza del personaje
-			[ ] subir lateralmente: se teletransporta a arriba cuando falta poco para llegar, no debería
-			[ ] a poca resolución y/o pocos FPS se clava en los techos al caer lentamente
-			[ ] atravieza la pared levemente al estar cerca de la orilla, lo que lo hace subir al instante a bloques o clavarse dejando softlockeado al jugador
 	[ ] Undo y Redo
 		[ ] Agregar control y
+	[ ] Checkpoints
+		[ ] Agregar una bandera de checkpoint para aparecer trás morir
 	[ ] Nubes
 		[ ] Hacer más redondas a las nubes, menos círculos
 			[ ] Evitar que grandes resoluciones hagan más feas las nubes
@@ -64,7 +80,9 @@ I was in spanish already, Imma let this like that for now
 	[ ] Pinchos
 		[ ] Cambiar la imagen como hace el bloque para que no sean solo muchas bolas espinosas
 		[ ] Dar colores más notables (se pierde fácilmente con el color del fondo)
+		[ ] Reducir hitbox
 	[ ] UX/UI
+		[ ] Agregar un botón para reiniciar el nivel (que haga lo mismo que el botón R del teclado, y solo aparezca mientras se está jugando)
 		[ ] Agregar interacción de cursor (por css o algo)
 		[ ] Hacer que los clicks y "hovers" convivan
 		[ ] Describir todo
@@ -75,13 +93,25 @@ I was in spanish already, Imma let this like that for now
 		[ ] Permitir que se cargue un archivo de nivel si se arrastra al canvas del juego
 	[ ] Bloques
 		[ ] Redibujar los bloques al momento de agregar uno nuevo (solo en el frame que se crea)
-	[ ] Enemigo
-		[ ] Hacer un estado de muerte
-			[ ] Hacer una animación de muerte
-			[ ] Volverse invisible y luego volver a la posición inicial
+	[x] Enemigo
+		[x] Hacer un estado de muerte
+			[x] Hacer una animación de muerte
+			[x] Volverse invisible
 	[ ] Jugador
-		[ ] Hacer un estado de muerte
-			[ ] Detenerse al morir
+		[x] Hacer un estado de muerte
+			[x] Detenerse al morir
+		[ ] Reparar colisión con block
+			[ ] colisión lateral: No quiere colaborar con los saltos cuando la resolución es grande.
+			[ ] choque vertical: pierde velocidad horizontal el chocar la cabeza del personaje
+			[ ] subir lateralmente: se teletransporta a arriba cuando falta poco para llegar, no debería
+			[ ] a poca resolución y/o pocos FPS se clava en los techos al caer lentamente
+			[ ] atravieza la pared levemente al estar cerca de la orilla, lo que lo hace subir al instante a bloques o clavarse dejando softlockeado al jugador
+	[ ] Touch screen
+		[ ] Permitir que se pueda jugar
+		[ ] Dibujar un joystick donde toca para dar a entender como mueves al personaje
+			[ ] Animar el joystick sin suavidad
+			[ ] Animar el joystick con suavidad
+		[ ] Que el joystick se mueva donde el dedo, para facilitar el movimiento en screen
 	[ ] Créditos
 		[ ] Agregar link de github
 		[ ] Agregar "Made by P_Luizon"

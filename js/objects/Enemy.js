@@ -7,10 +7,6 @@ export class Enemy extends GameObject {
 		super(json);
 		this.id = json.id || 1;
 		this.name = 'enemy';
-		// this.width = json.width || gridWidth;
-		// this.height = json.width || gridHeight;
-		// this.x = json.x || 0;
-		// this.y = json.y || 0;
 		this.xInit = json.x || 0;
 		this.eyesX = this.width/2;
 		this.eyesY = this.height/4;
@@ -20,15 +16,10 @@ export class Enemy extends GameObject {
 		this.eyesColor = json.eyesColor || "#FFF";
 		this.hspeed = this.width / 15;
 		this.direction = 1; // 1 is right -1 is left
-		this.alpha = json.alpha || 1;
-		this.living = true;
+		this.dead = false;
 		
 		destroyObject(this.x, this.y);
 
-		// this.canvas = document.createElement('canvas');
-		// this.canvas.width = this.width;
-		// this.canvas.height = this.height;
-		// this.canvasCtx = this.canvas.getContext('2d');
 		this.updateCanvas();
 
 		if(!json.specialObject)
@@ -37,20 +28,29 @@ export class Enemy extends GameObject {
 	
 	updateCanvas() {
 		this.canvasCtx.fillStyle = this.color;
-		drawRect({x:0, y:0, width:this.width, height:this.height,}, this.canvasCtx);
+		drawRect({
+			x: 0,
+			y: 0,
+			width: this.width,
+			height: this.height,
+		}, this.canvasCtx);
 		this.canvasCtx.fillStyle = this.eyesColor;
-		drawRect({x:this.eyesX, 				y:this.eyesY, width:this.width/6, height:this.height/2,}, this.canvasCtx);
-		drawRect({x:this.eyesX+this.width/3, 	y:this.eyesY, width:this.width/6, height:this.height/2,}, this.canvasCtx);
-	}
-	
-	draw(ctx) {
-		ctx.globalAlpha = this.alpha;
-		ctx.drawImage(this.canvas, this.x, this.y, this.width, this.height);
-		ctx.globalAlpha = 1;
+		drawRect({
+			x:this.eyesX,
+			y:this.eyesY,
+			width:this.width/6,
+			height:this.height/2,
+		}, this.canvasCtx);
+		drawRect({
+			x:this.eyesX+this.width/3,
+			y:this.eyesY,
+			width:this.width/6,
+			height:this.height/2,
+		}, this.canvasCtx);
 	}
 	
 	move() {
-		if(playing && this.living) {
+		if(playing && !this.dead) {
 			let hasTurned = false;
 			// girar si llega a un borde
 				if((this.x + this.width + this.hspeed > width && this.direction > 0)
@@ -93,14 +93,26 @@ export class Enemy extends GameObject {
 			this.x+= this.direction * this.hspeed;
 			this.moveEyes();
 		}
-		if(!this.living)
-			this.alpha = .5;
+		if(this.dead) {
+			if(this.alpha > 0) {
+				if(this.alpha == 1) { // draw the dead body just once, before start fading
+					this.canvasCtx.fillStyle = this.color;
+					drawRect({
+						x: 0,
+						y: 0,
+						width: this.width,
+						height: this.height,
+					}, this.canvasCtx);
+				}
+				this.alpha = Math.max(this.alpha - 0.05, 0);
+			}
+		}
 		else
 			this.alpha = 1;
 	}
 	
 	moveEyes() {
-		if(playing && this.living) {
+		if(playing && !this.dead) {
 			if(this.direction > 0)
 				this.eyesX = this.width/2;
 			else
@@ -111,7 +123,7 @@ export class Enemy extends GameObject {
 			this.eyesX = this.width/2;
 	}
 
-	getRect(rect) {
+	getRect(rect = {}) {
 		return {
 			x: rect.x || this.x,
 			y: rect.y + 1 || this.y + 1, // para evitar chocar con techo
